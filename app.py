@@ -6,7 +6,7 @@ import requests
 variables_df = pd.read_csv('Variables.csv')
 
 # Define your Census API key
-API_KEY = 'your_census_api_key'
+API_KEY = 'fd901c69fb4729a262b7e163c1db69737513827d'
 
 def fetch_all_districts_data(state_code, var_code, api_key):
     url = f"https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{var_code}&for=congressional%20district:*&in=state:{state_code}&key={api_key}"
