@@ -92,37 +92,46 @@ with tab3:
     st.title('Top 10 Measures for a Congressional District')
     st.write('This tab shows all the measures where the selected congressional district ranks in the top 10.')
 
-    # Select a congressional district
-    district_name = st.text_input("Enter the congressional district name (e.g., 'New York 14'):")
-
-    if st.button("Fetch Top 10 Measures"):
-        # Prepare a dataframe to store measures where the district is in the top 10
-        top_measures = []
-
-        # Iterate through all measures
-        for _, row in variables_df.iterrows():
-            selected_var = row['Variable']
-            description = row['Description']
-            
-            # Fetch data for all states and all congressional districts
-            df = fetch_all_states_data(selected_var, API_KEY)
-            
-            if df is not None:
-                # Calculate rankings
-                ranked_df = calculate_rankings(df, selected_var)
-                
-                # Check if the selected district is in the top 10
-                if any(ranked_df['NAME'].str.contains(district_name, case=False) & (ranked_df['Rank'] <= 10)):
-                    top_measures.append({
-                        'Measure': description,
-                        'Variable': selected_var,
-                        'Rank': ranked_df[ranked_df['NAME'].str.contains(district_name, case=False)]['Rank'].values[0],
-                        'Value': ranked_df[ranked_df['NAME'].str.contains(district_name, case=False)][selected_var].values[0]
-                    })
+    # Fetch data for one of the measures to get the list of congressional districts
+    # For simplicity, we use the first variable in the CSV to fetch the list
+    sample_var = variables_df.iloc[0]['Variable']
+    sample_df = fetch_all_states_data(sample_var, API_KEY)
+    if sample_df is not None:
+        # Create a list of unique congressional districts
+        sample_df['District Name'] = sample_df['NAME'].str.strip()
+        congressional_districts = sample_df['District Name'].unique()
         
-        if top_measures:
-            top_measures_df = pd.DataFrame(top_measures)
-            st.write(f"Measures where {district_name} ranks in the top 10")
-            st.dataframe(top_measures_df)
-        else:
-            st.write(f"No measures found where {district_name} is in the top 10.")
+        # Select a congressional district from a selectbox
+        district_name = st.selectbox("Select a congressional district", congressional_districts)
+
+        if st.button("Fetch Top 10 Measures"):
+            # Prepare a dataframe to store measures where the district is in the top 10
+            top_measures = []
+
+            # Iterate through all measures
+            for _, row in variables_df.iterrows():
+                selected_var = row['Variable']
+                description = row['Description']
+                
+                # Fetch data for all states and all congressional districts
+                df = fetch_all_states_data(selected_var, API_KEY)
+                
+                if df is not None:
+                    # Calculate rankings
+                    ranked_df = calculate_rankings(df, selected_var)
+                    
+                    # Check if the selected district is in the top 10
+                    if any(ranked_df['NAME'].str.contains(district_name, case=False) & (ranked_df['Rank'] <= 10)):
+                        top_measures.append({
+                            'Measure': description,
+                            'Variable': selected_var,
+                            'Rank': ranked_df[ranked_df['NAME'].str.contains(district_name, case=False)]['Rank'].values[0],
+                            'Value': ranked_df[ranked_df['NAME'].str.contains(district_name, case=False)][selected_var].values[0]
+                        })
+            
+            if top_measures:
+                top_measures_df = pd.DataFrame(top_measures)
+                st.write(f"Measures where {district_name} ranks in the top 10")
+                st.dataframe(top_measures_df)
+            else:
+                st.write(f"No measures found where {district_name} is in the top 10.")
