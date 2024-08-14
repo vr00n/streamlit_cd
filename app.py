@@ -41,8 +41,16 @@ if search_term:
         # Find the corresponding variable code
         selected_var = filtered_df[filtered_df['Description'] == selected_description]['Variable'].values[0]
         
-        # User selects the state code
-        state_cd = st.selectbox("Select a state", sorted(variables_df['Category'].unique()))  # Example of dropdown
+        # Predefined list of state codes
+        state_codes = {
+            'Alabama': '01', 'Alaska': '02', 'Arizona': '04', 'Arkansas': '05', 'California': '06',
+            # Add more state names and codes here...
+            'Wyoming': '56'
+        }
+        
+        # User selects the state name, then get the code
+        state_name = st.selectbox("Select a state", sorted(state_codes.keys()))
+        state_cd = state_codes[state_name]
         
         if st.button("Fetch and Rank Data"):
             # Fetch data for all districts in the state
@@ -53,8 +61,8 @@ if search_term:
                 ranked_df = calculate_rankings(df, selected_var)
                 
                 # Display the rankings with desired columns
-                ranked_df['State Name'] = state_cd
-                st.write(f"Rankings for {selected_description} in State {state_cd}")
+                ranked_df['State Name'] = state_name
+                st.write(f"Rankings for {selected_description} in {state_name}")
                 st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
     else:
         st.write("No variables found matching your search term.")
