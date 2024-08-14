@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import requests
-from rapidfuzz import process
 
 # Load the variables from the CSV file
 variables_df = pd.read_csv('Variables.csv')
