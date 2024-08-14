@@ -25,7 +25,7 @@ def calculate_rankings(df, var_code):
     return df.sort_values(by='Rank')
 
 # Create tabs
-tab1, tab2 = st.tabs(["Rank Congressional Districts", "Top N Districts by Measure"])
+tab1, tab2, tab3 = st.tabs(["Rank Congressional Districts", "Top N Districts by Measure", "Top 10 Measures for a District"])
 
 with tab1:
     st.title('Census Data by Congressional District')
@@ -87,3 +87,42 @@ with tab2:
             ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
             st.write(f"Top {top_n} Congressional Districts by {selected_description}")
             st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]].head(top_n))
+
+with tab3:
+    st.title('Top 10 Measures for a Congressional District')
+    st.write('This tab shows all the measures where the selected congressional district ranks in the top 10.')
+
+    # Select a congressional district
+    district_name = st.text_input("Enter the congressional district name (e.g., 'New York 14'):")
+
+    if st.button("Fetch Top 10 Measures"):
+        # Prepare a dataframe to store measures where the district is in the top 10
+        top_measures = []
+
+        # Iterate through all measures
+        for _, row in variables_df.iterrows():
+            selected_var = row['Variable']
+            description = row['Description']
+            
+            # Fetch data for all states and all congressional districts
+            df = fetch_all_states_data(selected_var, API_KEY)
+            
+            if df is not None:
+                # Calculate rankings
+                ranked_df = calculate_rankings(df, selected_var)
+                
+                # Check if the selected district is in the top 10
+                if any(ranked_df['NAME'].str.contains(district_name, case=False) & (ranked_df['Rank'] <= 10)):
+                    top_measures.append({
+                        'Measure': description,
+                        'Variable': selected_var,
+                        'Rank': ranked_df[ranked_df['NAME'].str.contains(district_name, case=False)]['Rank'].values[0],
+                        'Value': ranked_df[ranked_df['NAME'].str.contains(district_name, case=False)][selected_var].values[0]
+                    })
+        
+        if top_measures:
+            top_measures_df = pd.DataFrame(top_measures)
+            st.write(f"Measures where {district_name} ranks in the top 10")
+            st.dataframe(top_measures_df)
+        else:
+            st.write(f"No measures found where {district_name} is in the top 10.")
