@@ -24,36 +24,66 @@ def calculate_rankings(df, var_code):
     df['Rank'] = df[var_code].rank(ascending=False)
     return df.sort_values(by='Rank')
 
-st.title('Census Data by Congressional District')
-st.write('This app fetches and ranks census data for congressional districts across all states.')
+# Create tabs
+tab1, tab2 = st.tabs(["Rank Congressional Districts", "Top N Districts by Measure"])
 
-# User input for fuzzy search
-search_term = st.text_input("Search for a variable description:")
+with tab1:
+    st.title('Census Data by Congressional District')
+    st.write('This tab fetches and ranks census data for congressional districts across all states.')
 
-if search_term:
-    # Filter the dataframe based on the search term
-    filtered_df = variables_df[variables_df['Description'].str.contains(search_term, case=False, na=False)]
-    
-    if not filtered_df.empty:
-        # Let the user select from the filtered descriptions
-        selected_description = st.selectbox("Select a variable description", filtered_df['Description'].values)
+    # User input for fuzzy search
+    search_term = st.text_input("Search for a variable description:")
+
+    if search_term:
+        # Filter the dataframe based on the search term
+        filtered_df = variables_df[variables_df['Description'].str.contains(search_term, case=False, na=False)]
         
-        # Find the corresponding variable code
-        selected_var = filtered_df[filtered_df['Description'] == selected_description]['Variable'].values[0]
-        
-        if st.button("Fetch and Rank Data"):
-            # Fetch data for all states and all congressional districts
-            df = fetch_all_states_data(selected_var, API_KEY)
+        if not filtered_df.empty:
+            # Let the user select from the filtered descriptions
+            selected_description = st.selectbox("Select a variable description", filtered_df['Description'].values)
             
-            if df is not None:
-                # Calculate rankings
-                ranked_df = calculate_rankings(df, selected_var)
+            # Find the corresponding variable code
+            selected_var = filtered_df[filtered_df['Description'] == selected_description]['Variable'].values[0]
+            
+            if st.button("Fetch and Rank Data"):
+                # Fetch data for all states and all congressional districts
+                df = fetch_all_states_data(selected_var, API_KEY)
                 
-                # Display the rankings with desired columns
-                ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
-                st.write(f"Rankings for {selected_description} across all states")
-                st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
+                if df is not None:
+                    # Calculate rankings
+                    ranked_df = calculate_rankings(df, selected_var)
+                    
+                    # Display the rankings with desired columns
+                    ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
+                    st.write(f"Rankings for {selected_description} across all states")
+                    st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
+        else:
+            st.write("No variables found matching your search term.")
     else:
-        st.write("No variables found matching your search term.")
-else:
-    st.write("Please enter a search term to find variable descriptions.")
+        st.write("Please enter a search term to find variable descriptions.")
+
+with tab2:
+    st.title('Top N Congressional Districts by Measure')
+    st.write('This tab shows the top N congressional districts by a selected measure.')
+
+    # Select a variable
+    selected_description = st.selectbox("Select a measure", variables_df['Description'].values)
+    
+    # Find the corresponding variable code
+    selected_var = variables_df[variables_df['Description'] == selected_description]['Variable'].values[0]
+
+    # Select the number of top districts to show
+    top_n = st.number_input("Select the number of top districts to display:", min_value=1, max_value=100, value=10)
+    
+    if st.button("Fetch Top N Districts"):
+        # Fetch data for all states and all congressional districts
+        df = fetch_all_states_data(selected_var, API_KEY)
+        
+        if df is not None:
+            # Calculate rankings
+            ranked_df = calculate_rankings(df, selected_var)
+            
+            # Display only the top N rankings
+            ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
+            st.write(f"Top {top_n} Congressional Districts by {selected_description}")
+            st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]].head(top_n))
