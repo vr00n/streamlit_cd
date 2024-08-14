@@ -8,21 +8,36 @@ variables_df = pd.read_csv('Variables.csv')
 # Define your Census API key
 API_KEY = 'fd901c69fb4729a262b7e163c1db69737513827d'
 
-@st.cache_data(show_spinner=False)
-def fetch_all_states_data(variables, api_key):
-    # Fetch data for multiple variables at once
-    var_codes = ",".join(variables)
-    url = f"https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{var_codes}&for=congressional%20district:*&in=state:*&key={api_key}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        df = pd.DataFrame(data[1:], columns=data[0])
-        for var in variables:
-            df[var] = pd.to_numeric(df[var], errors='coerce')
-        return df
-    else:
-        st.error(f"Failed to fetch data from the Census API: {response.status_code}")
-        return None
+def fetch_data_in_batches(variables, api_key, batch_size=10, retries=3, timeout=10):
+    # Break down variables into smaller batches
+    batched_variables = [variables[i:i + batch_size] for i in range(0, len(variables), batch_size)]
+    full_df = pd.DataFrame()
+
+    for batch in batched_variables:
+        var_codes = ",".join(batch)
+        url = f"https://api.census.gov/data/2017/acs/acs5/profile?get=NAME,{var_codes}&for=congressional%20district:*&in=state:*&key={api_key}"
+
+        for attempt in range(retries):
+            try:
+                response = requests.get(url, timeout=timeout)
+                if response.status_code == 200:
+                    data = response.json()
+                    df = pd.DataFrame(data[1:], columns=data[0])
+                    for var in batch:
+                        df[var] = pd.to_numeric(df[var], errors='coerce')
+                    full_df = pd.concat([full_df, df], axis=1)
+                    break
+                else:
+                    st.error(f"Failed to fetch data from the Census API: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                if attempt < retries - 1:
+                    st.warning(f"Request failed. Retrying... ({attempt + 1}/{retries})")
+                    time.sleep(2 ** attempt)  # Exponential backoff
+                else:
+                    st.error("Failed to fetch data after multiple attempts.")
+                    return None
+
+    return full_df
 
 def calculate_rankings(df, var_code):
     df['Rank'] = df[var_code].rank(ascending=False)
@@ -62,7 +77,7 @@ with tab1:
             
             if st.button("Fetch and Rank Data"):
                 # Fetch data for all states and all congressional districts
-                df = fetch_all_states_data([selected_var], API_KEY)
+                df = fetch_data_in_batches([selected_var], API_KEY)
                 
                 if df is not None:
                     # Calculate rankings
@@ -92,7 +107,7 @@ with tab2:
     
     if st.button("Fetch Top N Districts"):
         # Fetch data for all states and all congressional districts
-        df = fetch_all_states_data([selected_var], API_KEY)
+        df = fetch_data_in_batches([selected_var], API_KEY)
         
         if df is not None:
             # Calculate rankings
@@ -109,7 +124,7 @@ with tab3:
 
     # Fetch data for one of the measures to get the list of congressional districts
     sample_var = variables_df.iloc[0]['Variable']
-    sample_df = fetch_all_states_data([sample_var], API_KEY)
+    sample_df = fetch_data_in_batches([sample_var], API_KEY)
     if sample_df is not None:
         # Create a list of unique congressional districts
         sample_df['District Name'] = sample_df['NAME'].str.strip()
@@ -121,8 +136,8 @@ with tab3:
         if st.button("Fetch Top 10 Measures"):
             top_measures = []
 
-            # Fetch data for all variables in one go
-            df = fetch_all_states_data(variables_df['Variable'].values, API_KEY)
+            # Fetch data for all variables in smaller batches
+            df = fetch_data_in_batches(variables_df['Variable'].values, API_KEY, batch_size=10)
             
             if df is not None:
                 # Process each variable in parallel
