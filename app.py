@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 
 # Load the variables from the CSV file
-variables_df = pd.read_csv('/mnt/data/Variables.csv')
+variables_df = pd.read_csv('Variables.csv')
 
 # Display the DataFrame's columns to verify the column names
 st.write("Columns in Variables CSV:", variables_df.columns)
