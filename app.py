@@ -34,7 +34,7 @@ st.write('This app fetches and ranks census data for congressional districts.')
 state_cd = st.text_input("Enter state code (e.g., 36 for NY):", "36")
 
 # Select a variable from the loaded CSV
-selected_var = st.selectbox("Select a variable", variables_df['variable_code'].values)
+selected_var = st.selectbox("Select a variable", variables_df['Variable'].values)
 
 if st.button("Fetch and Rank Data"):
     # Fetch data for all districts in the state
@@ -45,7 +45,7 @@ if st.button("Fetch and Rank Data"):
         ranked_df = calculate_rankings(df, selected_var)
         
         # Display the rankings
-        var_name = variables_df[variables_df['variable_code'] == selected_var]['variable_name'].values[0]
+        var_name = variables_df[variables_df['Variable'] == selected_var]['Description'].values[0]
         st.write(f"Rankings for {var_name} in State {state_cd}")
         st.dataframe(ranked_df)
 
