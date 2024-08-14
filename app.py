@@ -1,12 +1,10 @@
 import streamlit as st
 import pandas as pd
 import requests
+from rapidfuzz import process
 
 # Load the variables from the CSV file
 variables_df = pd.read_csv('Variables.csv')
-
-# Display the DataFrame's columns to verify the column names
-st.write("Columns in Variables CSV:", variables_df.columns)
 
 # Define your Census API key
 API_KEY = 'fd901c69fb4729a262b7e163c1db69737513827d'
@@ -30,25 +28,33 @@ def calculate_rankings(df, var_code):
 st.title('Census Data by Congressional District')
 st.write('This app fetches and ranks census data for congressional districts.')
 
-# User input for state code
-state_cd = st.text_input("Enter state code (e.g., 36 for NY):", "36")
+# Fuzzy search for variable descriptions
+search_term = st.text_input("Search for a variable description:")
 
-# Select a variable from the loaded CSV
-selected_var = st.selectbox("Select a variable", variables_df['Variable'].values)
+if search_term:
+    # Use fuzzy matching to find the best matching variables
+    choices = variables_df['Description'].tolist()
+    best_matches = process.extract(search_term, choices, limit=5)
+    matched_descriptions = [match[0] for match in best_matches]
 
-if st.button("Fetch and Rank Data"):
-    # Fetch data for all districts in the state
-    df = fetch_all_districts_data(state_cd, selected_var, API_KEY)
+    # Let the user select from the best matching descriptions
+    selected_description = st.selectbox("Select a variable description", matched_descriptions)
     
-    if df is not None:
-        # Calculate rankings
-        ranked_df = calculate_rankings(df, selected_var)
+    # Find the corresponding variable code
+    selected_var = variables_df[variables_df['Description'] == selected_description]['Variable'].values[0]
+    
+    # User selects the state code
+    state_cd = st.selectbox("Select a state", sorted(variables_df['Category'].unique()))  # Example of dropdown
+    
+    if st.button("Fetch and Rank Data"):
+        # Fetch data for all districts in the state
+        df = fetch_all_districts_data(state_cd, selected_var, API_KEY)
         
-        # Display the rankings
-        var_name = variables_df[variables_df['Variable'] == selected_var]['Description'].values[0]
-        st.write(f"Rankings for {var_name} in State {state_cd}")
-        st.dataframe(ranked_df)
-
-# Display the available variables
-st.write("Available Variables:")
-st.dataframe(variables_df.head())
+        if df is not None:
+            # Calculate rankings
+            ranked_df = calculate_rankings(df, selected_var)
+            
+            # Display the rankings with desired columns
+            ranked_df['State Name'] = state_cd
+            st.write(f"Rankings for {selected_description} in State {state_cd}")
+            st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
