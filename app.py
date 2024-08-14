@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import requests
+import time
+from concurrent.futures import ThreadPoolExecutor  # Add this import
 
 # Load the variables from the CSV file
 variables_df = pd.read_csv('Variables.csv')
