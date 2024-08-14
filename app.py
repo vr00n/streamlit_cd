@@ -3,7 +3,10 @@ import pandas as pd
 import requests
 
 # Load the variables from the CSV file
-variables_df = pd.read_csv('Variables.csv')
+variables_df = pd.read_csv('/mnt/data/Variables.csv')
+
+# Display the DataFrame's columns to verify the column names
+st.write("Columns in Variables CSV:", variables_df.columns)
 
 # Define your Census API key
 API_KEY = 'fd901c69fb4729a262b7e163c1db69737513827d'
@@ -31,7 +34,7 @@ st.write('This app fetches and ranks census data for congressional districts.')
 state_cd = st.text_input("Enter state code (e.g., 36 for NY):", "36")
 
 # Select a variable from the loaded CSV
-selected_var = st.selectbox("Select a variable", variables_df['Variable Code'].values)
+selected_var = st.selectbox("Select a variable", variables_df['variable_code'].values)
 
 if st.button("Fetch and Rank Data"):
     # Fetch data for all districts in the state
@@ -42,7 +45,7 @@ if st.button("Fetch and Rank Data"):
         ranked_df = calculate_rankings(df, selected_var)
         
         # Display the rankings
-        var_name = variables_df[variables_df['Variable Code'] == selected_var]['Variable Name'].values[0]
+        var_name = variables_df[variables_df['variable_code'] == selected_var]['variable_name'].values[0]
         st.write(f"Rankings for {var_name} in State {state_cd}")
         st.dataframe(ranked_df)
 
