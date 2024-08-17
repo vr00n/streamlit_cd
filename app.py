@@ -63,8 +63,13 @@ else:
 
     # Function to calculate rankings
     def calculate_rankings(df, var_code, rank_within_state=False, state=None):
+        # Filter the DataFrame by the selected state if ranking within state
         if rank_within_state and state is not None:
             df = df[df['state'] == state]
+            
+            if df.empty:
+                st.warning(f"No data found for the selected state: {state}. Please check the data or try a different state.")
+                return df
         
         # Ensure we are ranking based on the correct variable column
         if var_code in df.columns:
@@ -73,7 +78,6 @@ else:
             st.error(f"Variable column '{var_code}' not found in the dataset.")
         
         return df
-
     # Fetch data for a sample variable to get Congressional District names
     sample_var = variables_df.iloc[0]['Variable']
     sample_df = fetch_data_in_batches([sample_var], API_KEY)
