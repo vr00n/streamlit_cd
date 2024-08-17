@@ -129,6 +129,19 @@ else:
 
                 # Extract state code from district name (assuming the state is at the end of the district name)
                 selected_state = district_name.split(',')[-1].strip()
+                # Display the unique state codes in the DataFrame
+                unique_state_codes = fetched_data['state'].unique()
+                st.write(f"Unique state codes in the data: {unique_state_codes}")
+                
+                # Show the extracted state code from the district name
+                st.write(f"Extracted state code from district name: {selected_state}")
+                
+                # Ensure that the state code extracted from the district name is in the list of unique state codes
+                if selected_state in unique_state_codes:
+                    st.write("State code matches data.")
+                else:
+                    st.write("State code does not match any in the data.")
+
 
                 # Find the variable code for the selected measure
                 selected_var = variables_df[(variables_df['Category'] == category) & (variables_df['Measure'] == measure)]['Variable'].values[0]
