@@ -62,14 +62,14 @@ else:
         return full_df
 
     # Function to calculate rankings
-    def calculate_rankings(df, var_code, rank_within_state=False, state=None):
-        if rank_within_state and state is not None:
+def calculate_rankings(df, var_code, rank_within_state=False, state=None):
+    if rank_within_state and state is not None:
         df = df[df['state'] == state]
     
-        # Ensure we are ranking based on the correct variable column
-        if var_code in df.columns:
+    # Ensure we are ranking based on the correct variable column
+    if var_code in df.columns:
         df['Rank'] = df[var_code].rank(ascending=False)
-        else:
+    else:
         st.error(f"Variable column '{var_code}' not found in the dataset.")
     
     return df
