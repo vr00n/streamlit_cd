@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 variables_df = pd.read_csv('Variables.csv')
 
 # Filter variables that start with "Percent Estimate" and end with "PE"
-variables_df = variables_df[variables_df['Variable'].str.startswith("Percent Estimate") & variables_df['Variable'].str.endswith("PE")]
+variables_df = variables_df[variables_df['Variable'].str.endswith("PE")]
 
 # Check if the DataFrame is empty after filtering
 if variables_df.empty:
