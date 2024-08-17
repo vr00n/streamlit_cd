@@ -72,7 +72,7 @@ else:
         else:
             st.error(f"Variable column '{var_code}' not found in the dataset.")
     
-      return df
+    return df
 
         if rank_within_state and state is not None:
             df = df[df['state'] == state]
