@@ -129,6 +129,14 @@ else:
 
                 # Extract state code from district name (assuming the state is at the end of the district name)
                 selected_state = district_name.split(',')[-1].strip()
+
+
+                # Find the variable code for the selected measure
+                selected_var = variables_df[(variables_df['Category'] == category) & (variables_df['Measure'] == measure)]['Variable'].values[0]
+
+                # Fetch data
+                df = fetch_data_in_batches([selected_var], API_KEY)
+
                 # Display the unique state codes in the DataFrame
                 unique_state_codes = fetched_data['state'].unique()
                 st.write(f"Unique state codes in the data: {unique_state_codes}")
@@ -142,12 +150,6 @@ else:
                 else:
                     st.write("State code does not match any in the data.")
 
-
-                # Find the variable code for the selected measure
-                selected_var = variables_df[(variables_df['Category'] == category) & (variables_df['Measure'] == measure)]['Variable'].values[0]
-
-                # Fetch data
-                df = fetch_data_in_batches([selected_var], API_KEY)
                 
                 # Debugging: Print the fetched data to ensure it was retrieved correctly
                 st.write("Fetched Data:")
