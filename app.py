@@ -136,20 +136,6 @@ else:
 
                 # Fetch data
                 df = fetch_data_in_batches([selected_var], API_KEY)
-
-                # Display the unique state codes in the DataFrame
-                unique_state_codes = fetched_data['state'].unique()
-                st.write(f"Unique state codes in the data: {unique_state_codes}")
-                
-                # Show the extracted state code from the district name
-                st.write(f"Extracted state code from district name: {selected_state}")
-                
-                # Ensure that the state code extracted from the district name is in the list of unique state codes
-                if selected_state in unique_state_codes:
-                    st.write("State code matches data.")
-                else:
-                    st.write("State code does not match any in the data.")
-
                 
                 # Debugging: Print the fetched data to ensure it was retrieved correctly
                 st.write("Fetched Data:")
