@@ -7,6 +7,12 @@ from concurrent.futures import ThreadPoolExecutor
 # Load the variables from the CSV file
 variables_df = pd.read_csv('Variables.csv')
 
+# Filter variables that start with "Percent Estimate"
+variables_df = variables_df[variables_df['Variable'].str.startswith("Percent Estimate")]
+
+# Split the variables into Category and Measure
+variables_df[['Category', 'Measure']] = variables_df['Variable'].str.split('!!', 2).str[1:].apply(lambda x: pd.Series([x[0], ': '.join(x[1:])]))
+
 # Define your Census API key
 API_KEY = 'fd901c69fb4729a262b7e163c1db69737513827d'
 
@@ -46,45 +52,46 @@ def calculate_rankings(df, var_code):
     df['Rank'] = df[var_code].rank(ascending=False)
     return df
 
-# Function to process and rank variables
-def process_variable(var_code, description, district_name, df):
-    ranked_df = calculate_rankings(df[['NAME', var_code, 'state', 'congressional district']].copy(), var_code)
-    if any(ranked_df['NAME'].str.contains(district_name, case=False, regex=False) & (ranked_df['Rank'] <= 10)):
-        return {
-            'Measure': description,
-            'Variable': var_code,
-            'Rank': ranked_df[ranked_df['NAME'].str.contains(district_name, case=False, regex=False)]['Rank'].values[0],
-            'Value': ranked_df[ranked_df['NAME'].str.contains(district_name, case=False, regex=False)][var_code].values[0]
-        }
-    return None
+# Fetch data for a sample variable to get Congressional District names
+sample_var = variables_df.iloc[0]['Variable']
+sample_df = fetch_data_in_batches([sample_var], API_KEY)
 
-# Layout and UI
-st.title("Compare Your Congressional District")
-st.markdown("**Start by selecting your Congressional District**")
+if sample_df is not None:
+    # Extract Congressional District names
+    sample_df['District Name'] = sample_df['NAME'].str.strip()
+    congressional_districts = sample_df['District Name'].unique()
 
-# Select Congressional District
-district_name = st.selectbox("Select Congressional District", variables_df['Description'].unique())
+    # Layout and UI
+    st.title("Compare Your Congressional District")
+    st.markdown("**Start by selecting your Congressional District**")
 
-# Create a 3-column layout
-col1, col2, col3 = st.columns([1, 1, 2])
+    # Dropdown for Congressional Districts
+    district_name = st.selectbox("Select Congressional District", congressional_districts)
 
-with col1:
-    st.subheader("Select a Census Data Category")
-    category = st.radio("Category", variables_df['Description'].unique())
+    # Create a 3-column layout
+    col1, col2, col3 = st.columns([1, 1, 2])
 
-with col2:
-    st.subheader("Select a Measure to View Rankings")
-    measures = variables_df[variables_df['Description'] == category]['Variable'].values
-    measure = st.radio("Measure", measures)
+    with col1:
+        st.subheader("Select a Census Data Category")
+        category = st.radio("Category", variables_df['Category'].unique())
 
-with col3:
-    st.subheader(f"Rankings for Congressional District: {district_name} in {category}")
-    
-    if st.button("Fetch and Compare"):
-        df = fetch_data_in_batches([measure], API_KEY)
-        if df is not None:
-            ranked_df = calculate_rankings(df, measure)
-            ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
-            st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', measure]])
+    with col2:
+        st.subheader("Select a Measure to View Rankings")
+        measures = variables_df[variables_df['Category'] == category]['Measure'].unique()
+        measure = st.radio("Measure", measures)
+
+    with col3:
+        st.subheader(f"Rankings for Congressional District: {district_name} in {category}")
+        
+        if st.button("Fetch and Compare"):
+            # Find the variable code for the selected measure
+            selected_var = variables_df[(variables_df['Category'] == category) & (variables_df['Measure'] == measure)]['Variable'].values[0]
+            
+            # Fetch data
+            df = fetch_data_in_batches([selected_var], API_KEY)
+            if df is not None:
+                ranked_df = calculate_rankings(df, selected_var)
+                ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
+                st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
 
 # Additional functionality, filtering, and ranking logic can be added here.
