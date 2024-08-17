@@ -114,14 +114,29 @@ else:
 
                 # Fetch data
                 df = fetch_data_in_batches([selected_var], API_KEY)
-                if df is not None:
-                    ranked_df = calculate_rankings(df, selected_var, rank_within_state, selected_state)
-                    ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
-                    
-                    # Display the dataframe
-                    st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
+                
+                # Debugging: Print the fetched data to ensure it was retrieved correctly
+                st.write("Fetched Data:")
+                st.write(df.head())
 
-                    # Summary text
-                    total_districts = ranked_df.shape[0]
-                    selected_rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
-                    st.write(f"For your selected category '{category}' and measure '{measure}', the selected district ranks {int(selected_rank)} out of {total_districts} districts in the {'state' if rank_within_state else 'country'}.")
+                if df is not None and not df.empty:
+                    ranked_df = calculate_rankings(df, selected_var, rank_within_state, selected_state)
+                    
+                    # Debugging: Check the ranked dataframe
+                    st.write("Ranked Data:")
+                    st.write(ranked_df.head())
+
+                    if not ranked_df.empty:
+                        ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
+                        
+                        # Display the dataframe
+                        st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
+
+                        # Summary text
+                        total_districts = ranked_df.shape[0]
+                        selected_rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
+                        st.write(f"For your selected category '{category}' and measure '{measure}', the selected district ranks {int(selected_rank)} out of {total_districts} districts in the {'state' if rank_within_state else 'country'}.")
+                    else:
+                        st.warning("No ranking data found. Please ensure the selected measure has data for the chosen scope.")
+                else:
+                    st.warning("No data found for the selected measure. Please check the measure or try a different one.")
