@@ -117,7 +117,7 @@ else:
                 
                 # Debugging: Print the fetched data to ensure it was retrieved correctly
                 st.write("Fetched Data:")
-                st.write(df.head())
+                st.write(df)
 
                 if df is not None and not df.empty:
                     ranked_df = calculate_rankings(df, selected_var, rank_within_state, selected_state)
