@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 variables_df = pd.read_csv('Variables.csv')
 
 # Filter variables that start with "Percent Estimate" and end with "PE"
-variables_df = variables_df[variables_df['Variable'].str.endswith("PE")]
+variables_df = variables_df[variables_df['Variable'].str.startswith("Percent Estimate") & variables_df['Variable'].str.endswith("PE")]
 
 # Check if the DataFrame is empty after filtering
 if variables_df.empty:
@@ -18,14 +18,23 @@ else:
     st.write("Filtered DataFrame (first 5 rows):")
     st.write(variables_df.head())
 
-    # Split the variables into Category and Measure
-    variables_df['Category'] = variables_df['Variable'].str.split('!!').str[1]
-    variables_df['Measure'] = variables_df['Variable'].str.split('!!').str[2:].apply(lambda x: ': '.join(x))
+    # Split the descriptions into Category and Measure
+    def extract_category_and_measure(description):
+        parts = description.split('!!')
+        if len(parts) > 2:
+            category = parts[1]
+            measure = ': '.join(parts[2:])
+        else:
+            category = 'Unknown'
+            measure = description  # Use the whole description if it doesn't fit the expected format
+        return category, measure
 
-    # Debugging: Check for any NaN values in the Category or Measure columns
+    variables_df[['Category', 'Measure']] = variables_df['Description'].apply(lambda x: pd.Series(extract_category_and_measure(x)))
+
+    # Debugging: Check for any NaN or unexpected values in the Category or Measure columns
     if variables_df['Category'].isna().any() or variables_df['Measure'].isna().any():
-        st.error("Some variables could not be split correctly. Please check the CSV formatting.")
-        st.write("Rows with NaN values:")
+        st.error("Some descriptions could not be split correctly. Please check the CSV formatting.")
+        st.write("Rows with NaN or unexpected values:")
         st.write(variables_df[variables_df['Category'].isna() | variables_df['Measure'].isna()])
     else:
         # Define your Census API key
