@@ -62,13 +62,24 @@ else:
         return full_df
 
     # Function to calculate rankings
-    def calculate_rankings(df, var_code, rank_within_state=False, state=None):
-        # Filter the DataFrame by the selected state if ranking within state
-        if rank_within_state and state is not None:
-            df = df[df['state'] == state]
+    def calculate_rankings(df, var_code, rank_within_state=False, state_name=None):
+        # Map state names to state codes (you can update this dictionary with more states if needed)
+        state_name_to_code = {
+            'New Jersey': 34,
+            # Add other states here if necessary
+        }
+        
+        if rank_within_state and state_name is not None:
+            state_code = state_name_to_code.get(state_name)
+            
+            if state_code is not None:
+                df = df[df['state'] == state_code]
+            else:
+                st.warning(f"State code not found for the selected state: {state_name}")
+                return df
             
             if df.empty:
-                st.warning(f"No data found for the selected state: {state}. Please check the data or try a different state.")
+                st.warning(f"No data found for the selected state: {state_name}. Please check the data or try a different state.")
                 return df
         
         # Ensure we are ranking based on the correct variable column
