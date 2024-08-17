@@ -11,7 +11,8 @@ variables_df = pd.read_csv('Variables.csv')
 variables_df = variables_df[variables_df['Variable'].str.startswith("Percent Estimate")]
 
 # Split the variables into Category and Measure
-variables_df[['Category', 'Measure']] = variables_df['Variable'].str.split('!!', 2).str[1:].apply(lambda x: pd.Series([x[0], ': '.join(x[1:])]))
+variables_df['Category'] = variables_df['Variable'].str.split('!!').str[1]
+variables_df['Measure'] = variables_df['Variable'].str.split('!!').str[2:].apply(lambda x: ': '.join(x))
 
 # Define your Census API key
 API_KEY = 'fd901c69fb4729a262b7e163c1db69737513827d'
