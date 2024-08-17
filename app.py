@@ -30,6 +30,21 @@ else:
     # Define your Census API key
     API_KEY = 'fd901c69fb4729a262b7e163c1db69737513827d'
 
+    # U.S. State Name to FIPS Code mapping
+    state_name_to_code = {
+        'Alabama': '01', 'Alaska': '02', 'Arizona': '04', 'Arkansas': '05', 'California': '06',
+        'Colorado': '08', 'Connecticut': '09', 'Delaware': '10', 'District of Columbia': '11',
+        'Florida': '12', 'Georgia': '13', 'Hawaii': '15', 'Idaho': '16', 'Illinois': '17',
+        'Indiana': '18', 'Iowa': '19', 'Kansas': '20', 'Kentucky': '21', 'Louisiana': '22',
+        'Maine': '23', 'Maryland': '24', 'Massachusetts': '25', 'Michigan': '26', 'Minnesota': '27',
+        'Mississippi': '28', 'Missouri': '29', 'Montana': '30', 'Nebraska': '31', 'Nevada': '32',
+        'New Hampshire': '33', 'New Jersey': '34', 'New Mexico': '35', 'New York': '36', 'North Carolina': '37',
+        'North Dakota': '38', 'Ohio': '39', 'Oklahoma': '40', 'Oregon': '41', 'Pennsylvania': '42',
+        'Rhode Island': '44', 'South Carolina': '45', 'South Dakota': '46', 'Tennessee': '47', 'Texas': '48',
+        'Utah': '49', 'Vermont': '50', 'Virginia': '51', 'Washington': '53', 'West Virginia': '54',
+        'Wisconsin': '55', 'Wyoming': '56'
+    }
+
     # Function to fetch data in batches
     def fetch_data_in_batches(variables, api_key, batch_size=10, retries=3, timeout=10):
         batched_variables = [variables[i:i + batch_size] for i in range(0, len(variables), batch_size)]
@@ -63,17 +78,13 @@ else:
 
     # Function to calculate rankings
     def calculate_rankings(df, var_code, rank_within_state=False, state_name=None):
-        # Map state names to state codes (you can update this dictionary with more states if needed)
-        state_name_to_code = {
-            'New Jersey': 34,
-            # Add other states here if necessary
-        }
-        
         if rank_within_state and state_name is not None:
             state_code = state_name_to_code.get(state_name)
             
             if state_code is not None:
                 df = df[df['state'] == state_code]
+                st.write(f"Filtered Data for state {state_name} (State Code: {state_code}):")
+                st.write(df.head())  # Debugging
             else:
                 st.warning(f"State code not found for the selected state: {state_name}")
                 return df
@@ -89,6 +100,7 @@ else:
             st.error(f"Variable column '{var_code}' not found in the dataset.")
         
         return df
+
     # Fetch data for a sample variable to get Congressional District names
     sample_var = variables_df.iloc[0]['Variable']
     sample_df = fetch_data_in_batches([sample_var], API_KEY)
@@ -129,7 +141,6 @@ else:
 
                 # Extract state code from district name (assuming the state is at the end of the district name)
                 selected_state = district_name.split(',')[-1].strip()
-
 
                 # Find the variable code for the selected measure
                 selected_var = variables_df[(variables_df['Category'] == category) & (variables_df['Measure'] == measure)]['Variable'].values[0]
