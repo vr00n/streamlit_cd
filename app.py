@@ -182,20 +182,32 @@ else:
         st.title("Top 10 Measures for Your Congressional District")
 
         if sample_df is not None:
-            # Dropdown for Congressional Districts
+            # Check for duplicates in the DataFrame
+            if sample_df.duplicated().any():
+                st.warning("Duplicate rows found in the data. Dropping duplicates.")
+                sample_df = sample_df.drop_duplicates()
+        
+            # Ensure no duplicate columns (just in case)
+            sample_df = sample_df.loc[:, ~sample_df.columns.duplicated()]
+        
+            # Now proceed with the rest of the logic
             district_name = st.selectbox("Select Congressional District", congressional_districts, key="district_top10")
-
+        
             if st.button("Show Top 10 Measures"):
                 top_measures = []
-
+        
                 # Fetch data for all variables in the dataset
                 all_var_codes = variables_df['Variable'].unique()
                 df = fetch_data_in_batches(all_var_codes, API_KEY)
-
+        
                 if df is not None and not df.empty:
                     for var_code in all_var_codes:
                         ranked_df = calculate_rankings(df, var_code)
                         if not ranked_df.empty:
+                            # Check for duplicate rows and drop if any
+                            if ranked_df.duplicated().any():
+                                ranked_df = ranked_df.drop_duplicates()
+        
                             # Check if the selected district is in the top 10
                             if district_name in ranked_df['NAME'].values:
                                 district_rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
@@ -208,7 +220,7 @@ else:
                                         'Measure': measure,
                                         'Rank': district_rank
                                     })
-                    
+        
                     if top_measures:
                         top_measures_df = pd.DataFrame(top_measures)
                         top_measures_df = top_measures_df.sort_values(by='Rank')
