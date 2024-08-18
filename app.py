@@ -101,75 +101,89 @@ else:
         
         return df
 
-    # Fetch data for a sample variable to get Congressional District names
-    sample_var = variables_df.iloc[0]['Variable']
-    sample_df = fetch_data_in_batches([sample_var], API_KEY)
+    # Create tabs for user interactions
+    tab1, tab2 = st.tabs(["Compare Districts", "Top 10 Measures"])
 
-    if sample_df is not None:
-        # Extract Congressional District names
-        sample_df['District Name'] = sample_df['NAME'].str.strip()
-        congressional_districts = sample_df['District Name'].unique()
+    with tab1:
+        # Fetch data for a sample variable to get Congressional District names
+        sample_var = variables_df.iloc[0]['Variable']
+        sample_df = fetch_data_in_batches([sample_var], API_KEY)
 
-        # Layout and UI
-        st.title("Compare Your Congressional District")
-        st.markdown("**Start by selecting your Congressional District**")
+        if sample_df is not None:
+            # Extract Congressional District names
+            sample_df['District Name'] = sample_df['NAME'].str.strip()
+            congressional_districts = sample_df['District Name'].unique()
 
-        # Dropdown for Congressional Districts
-        district_name = st.selectbox("Select Congressional District", congressional_districts)
+            # Layout and UI
+            st.title("Compare Your Congressional District")
+            st.markdown("**Start by selecting your Congressional District**")
 
-        # Create a wider layout
-        col1, col2, col3 = st.columns([2, 2, 3])
+            # Dropdown for Congressional Districts
+            district_name = st.selectbox("Select Congressional District", congressional_districts)
 
-        with col1:
-            st.subheader("Select a Census Data Category")
-            category = st.radio("Category", variables_df['Category'].unique())
+            # Create a wider layout
+            col1, col2, col3 = st.columns([2, 2, 3])
 
-        with col2:
-            st.subheader("Select a Measure to View Rankings")
-            measures = variables_df[variables_df['Category'] == category]['Measure'].unique()
-            measure = st.radio("Measure", measures)
+            with col1:
+                st.subheader("Select a Census Data Category")
+                category = st.radio("Category", variables_df['Category'].unique())
 
-        with col3:
-            st.subheader(f"Rankings for Congressional District: {district_name} in {category}")
+            with col2:
+                st.subheader("Select a Measure to View Rankings")
+                measures = variables_df[variables_df['Category'] == category]['Measure'].unique()
+                measure = st.radio("Measure", measures)
 
-            # Option to rank within state or nationally
-            ranking_scope = st.radio("Rank within:", ['State', 'Nation'])
+            with col3:
+                st.subheader(f"Rankings for Congressional District: {district_name} in {category}")
 
-            if st.button("Fetch and Compare"):
-                # Determine if ranking is within state or nationally
-                rank_within_state = (ranking_scope == 'State')
+                # Option to rank within state or nationally
+                ranking_scope = st.radio("Rank within:", ['State', 'Nation'])
 
-                # Extract state code from district name (assuming the state is at the end of the district name)
-                selected_state = district_name.split(',')[-1].strip()
+                if st.button("Fetch and Compare"):
+                    # Determine if ranking is within state or nationally
+                    rank_within_state = (ranking_scope == 'State')
 
-                # Find the variable code for the selected measure
-                selected_var = variables_df[(variables_df['Category'] == category) & (variables_df['Measure'] == measure)]['Variable'].values[0]
+                    # Extract state code from district name (assuming the state is at the end of the district name)
+                    selected_state = district_name.split(',')[-1].strip()
 
-                # Fetch data
-                df = fetch_data_in_batches([selected_var], API_KEY)
-                
-                # Debugging: Print the fetched data to ensure it was retrieved correctly
-                st.write("Fetched Data:")
-                st.write(df)
+                    # Find the variable code for the selected measure
+                    selected_var = variables_df[(variables_df['Category'] == category) & (variables_df['Measure'] == measure)]['Variable'].values[0]
 
-                if df is not None and not df.empty:
-                    ranked_df = calculate_rankings(df, selected_var, rank_within_state, selected_state)
+                    # Fetch data
+                    df = fetch_data_in_batches([selected_var], API_KEY)
                     
-                    # Debugging: Check the ranked dataframe
-                    st.write("Ranked Data:")
-                    st.write(ranked_df.head())
+                    # Debugging: Print the fetched data to ensure it was retrieved correctly
+                    st.write("Fetched Data:")
+                    st.write(df)
 
-                    if not ranked_df.empty:
-                        ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
+                    if df is not None and not df.empty:
+                        ranked_df = calculate_rankings(df, selected_var, rank_within_state, selected_state)
                         
-                        # Display the dataframe
-                        st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
+                        # Debugging: Check the ranked dataframe
+                        st.write("Ranked Data:")
+                        st.write(ranked_df.head())
 
-                        # Summary text
-                        total_districts = ranked_df.shape[0]
-                        selected_rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
-                        st.write(f"For your selected category '{category}' and measure '{measure}', the selected district ranks {int(selected_rank)} out of {total_districts} districts in the {'state' if rank_within_state else 'country'}.")
+                        if not ranked_df.empty:
+                            ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
+                            
+                            # Display the dataframe
+                            st.dataframe(ranked_df[['congressional district', 'State Name', 'Rank', selected_var]])
+
+                            # Summary text
+                            total_districts = ranked_df.shape[0]
+                            selected_rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
+                            st.write(f"For your selected category '{category}' and measure '{measure}', the selected district ranks {int(selected_rank)} out of {total_districts} districts in the {'state' if rank_within_state else 'country'}.")
+                        else:
+                            st.warning("No ranking data found. Please ensure the selected measure has data for the chosen scope.")
                     else:
-                        st.warning("No ranking data found. Please ensure the selected measure has data for the chosen scope.")
-                else:
-                    st.warning("No data found for the selected measure. Please check the measure or try a different one.")
+                        st.warning("No data found for the selected measure. Please check the measure or try a different one.")
+
+    with tab2:
+        st.title("Top 10 Measures for Your Congressional District")
+
+        if sample_df is not None:
+            # Dropdown for Congressional Districts
+            district_name = st.selectbox("Select Congressional District", congressional_districts, key="district_top10")
+
+            if st.button("Show Top 10 Measures"):
+                top_me
