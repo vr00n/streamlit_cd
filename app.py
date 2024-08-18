@@ -110,6 +110,10 @@ else:
         sample_df = fetch_data_in_batches([sample_var], API_KEY)
 
         if sample_df is not None:
+            # Ensure no duplicate rows or columns
+            sample_df = sample_df.drop_duplicates()
+            sample_df = sample_df.loc[:, ~sample_df.columns.duplicated()]
+
             # Extract Congressional District names
             sample_df['District Name'] = sample_df['NAME'].str.strip()
             congressional_districts = sample_df['District Name'].unique()
@@ -152,17 +156,13 @@ else:
                     # Fetch data
                     df = fetch_data_in_batches([selected_var], API_KEY)
                     
-                    # Debugging: Print the fetched data to ensure it was retrieved correctly
-                    st.write("Fetched Data:")
-                    st.write(df)
+                    # Ensure no duplicate rows or columns
+                    df = df.drop_duplicates()
+                    df = df.loc[:, ~df.columns.duplicated()]
 
                     if df is not None and not df.empty:
                         ranked_df = calculate_rankings(df, selected_var, rank_within_state, selected_state)
                         
-                        # Debugging: Check the ranked dataframe
-                        st.write("Ranked Data:")
-                        st.write(ranked_df.head())
-
                         if not ranked_df.empty:
                             ranked_df['State Name'] = ranked_df['NAME'].str.split(',').str[-1].str.strip()
                             
@@ -182,32 +182,28 @@ else:
         st.title("Top 10 Measures for Your Congressional District")
 
         if sample_df is not None:
-            # Check for duplicates in the DataFrame
-            if sample_df.duplicated().any():
-                st.warning("Duplicate rows found in the data. Dropping duplicates.")
-                sample_df = sample_df.drop_duplicates()
-        
-            # Ensure no duplicate columns (just in case)
-            sample_df = sample_df.loc[:, ~sample_df.columns.duplicated()]
-        
-            # Now proceed with the rest of the logic
+            # Dropdown for Congressional Districts
             district_name = st.selectbox("Select Congressional District", congressional_districts, key="district_top10")
-        
+
             if st.button("Show Top 10 Measures"):
                 top_measures = []
-        
+
                 # Fetch data for all variables in the dataset
                 all_var_codes = variables_df['Variable'].unique()
                 df = fetch_data_in_batches(all_var_codes, API_KEY)
-        
+
                 if df is not None and not df.empty:
+                    # Ensure no duplicate rows or columns
+                    df = df.drop_duplicates()
+                    df = df.loc[:, ~df.columns.duplicated()]
+
                     for var_code in all_var_codes:
                         ranked_df = calculate_rankings(df, var_code)
                         if not ranked_df.empty:
-                            # Check for duplicate rows and drop if any
-                            if ranked_df.duplicated().any():
-                                ranked_df = ranked_df.drop_duplicates()
-        
+                            # Ensure no duplicate rows or columns in ranked data
+                            ranked_df = ranked_df.drop_duplicates()
+                            ranked_df = ranked_df.loc[:, ~ranked_df.columns.duplicated()]
+
                             # Check if the selected district is in the top 10
                             if district_name in ranked_df['NAME'].values:
                                 district_rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
@@ -220,7 +216,7 @@ else:
                                         'Measure': measure,
                                         'Rank': district_rank
                                     })
-        
+
                     if top_measures:
                         top_measures_df = pd.DataFrame(top_measures)
                         top_measures_df = top_measures_df.sort_values(by='Rank')
@@ -230,3 +226,4 @@ else:
                         st.warning(f"No top 10 rankings found for {district_name}.")
                 else:
                     st.warning("Failed to fetch data or data is empty.")
+
