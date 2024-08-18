@@ -186,4 +186,35 @@ else:
             district_name = st.selectbox("Select Congressional District", congressional_districts, key="district_top10")
 
             if st.button("Show Top 10 Measures"):
-                top_me
+                top_measures = []
+
+                # Fetch data for all variables in the dataset
+                all_var_codes = variables_df['Variable'].unique()
+                df = fetch_data_in_batches(all_var_codes, API_KEY)
+
+                if df is not None and not df.empty:
+                    for var_code in all_var_codes:
+                        ranked_df = calculate_rankings(df, var_code)
+                        if not ranked_df.empty:
+                            # Check if the selected district is in the top 10
+                            if district_name in ranked_df['NAME'].values:
+                                district_rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
+                                if district_rank <= 10:
+                                    # Get the measure associated with the variable
+                                    measure = variables_df[variables_df['Variable'] == var_code]['Measure'].values[0]
+                                    category = variables_df[variables_df['Variable'] == var_code]['Category'].values[0]
+                                    top_measures.append({
+                                        'Category': category,
+                                        'Measure': measure,
+                                        'Rank': district_rank
+                                    })
+                    
+                    if top_measures:
+                        top_measures_df = pd.DataFrame(top_measures)
+                        top_measures_df = top_measures_df.sort_values(by='Rank')
+                        st.write(f"Top 10 Measures for {district_name}")
+                        st.dataframe(top_measures_df)
+                    else:
+                        st.warning(f"No top 10 rankings found for {district_name}.")
+                else:
+                    st.warning("Failed to fetch data or data is empty.")
