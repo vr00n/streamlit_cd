@@ -85,7 +85,7 @@ else:
                         else:
                             return [''] * len(row)
 
-                    # Set table width and length, making it 100% wide
+                    # Set table width to 100% and ensure the table fits within the container
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
                         use_container_width=True
