@@ -13,6 +13,25 @@ variables_df = variables_df[variables_df['Variable'].str.endswith("PE")]
 # Load ZIP code to congressional district mapping
 zip_to_district_df = pd.read_csv('zip_to_congressional_district.csv')
 
+# Mapping of state abbreviations to full names
+state_abbr_to_name = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'DC': 'District of Columbia',
+    'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois',
+    'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana',
+    'ME': 'Maine', 'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota',
+    'MS': 'Mississippi', 'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+    'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina',
+    'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania',
+    'RI': 'Rhode Island', 'SC': 'South Carolina', 'SD': 'South Dakota', 'TN': 'Tennessee',
+    'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington',
+    'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
+}
+
+# Helper function to convert district number to ordinal (e.g., 1 -> 1st)
+def ordinal(n):
+    return "%d%s" % (n, "tsnrhtdd"[(n//10%10!=1)*(n%10<4)*n%10::4])
+
 if variables_df.empty or df.empty or zip_to_district_df.empty:
     st.error("Data could not be loaded. Please check the data files.")
 else:
@@ -51,9 +70,21 @@ else:
                 if not district_info.empty:
                     state_abbr = district_info['state_abbr'].values[0]
                     district_number = district_info['district'].values[0]
-                    district_name = f"{state_abbr}-{district_number}"
+                    
+                    # Convert district number to ordinal (e.g., 1 -> 1st)
+                    district_ordinal = ordinal(int(district_number))
+                    
+                    # Get the full state name
+                    state_name = state_abbr_to_name[state_abbr]
+                    
+                    # Construct the full district name in the format used in census_data.csv
+                    district_name = f"Congressional District {district_ordinal} (115th Congress), {state_name}"
 
                     st.write(f"Congressional District: {district_name}")
+
+                    # Ensure district name format matches the data
+                    district_name = district_name.strip()
+                    df['NAME'] = df['NAME'].str.strip()
 
                     # Filter the data for the selected district
                     district_df = df[df['NAME'].str.contains(district_name, case=False)]
@@ -85,3 +116,37 @@ else:
                     st.warning("ZIP code not found in the database. Please try another.")
             except ValueError:
                 st.error("Invalid ZIP code format. Please enter a valid ZIP code.")
+
+    # Tab 2: Top 10 Measures for Congressional District
+    with tab2:
+        st.title("Top 10 Measures for Your Congressional District")
+
+        if zip_code and not district_info.empty:
+            if district_name:
+                district_name = f"{state_abbr}-{district_number}"
+
+                top_measures = []
+
+                # Get all the percent estimate variables
+                all_var_codes = variables_df['Variable'].unique()
+
+                for var_code in all_var_codes:
+                    ranked_df = calculate_rankings(df, var_code)
+                    if not ranked_df.empty and district_name in ranked_df['NAME'].values:
+                        district_rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
+                        if district_rank <= 10:
+                            measure = variables_df[variables_df['Variable'] == var_code]['Measure'].values[0]
+                            category = variables_df[variables_df['Variable'] == var_code]['Category'].values[0]
+                            top_measures.append({
+                                'Category': category,
+                                'Measure': measure,
+                                'Rank': district_rank
+                            })
+
+                if top_measures:
+                    top_measures_df = pd.DataFrame(top_measures)
+                    top_measures_df = top_measures_df.sort_values(by='Rank')
+                    st.write(f"Top 10 Measures for {district_name}")
+                    st.dataframe(top_measures_df)
+                else:
+                    st.warning(f"No top 10 rankings found for {district_name}.")
