@@ -61,22 +61,35 @@ else:
                     for _, row in variables_df.iterrows():
                         var_code = row['Variable']
                         category = row['Category']
+                        measure_name = row['Measure']
                         measure_value = district_df[var_code].values[0]
                         ranked_df = calculate_rankings(df, var_code)
                         rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
-                        measures_data.append({'Category': category, 'Measure Value': measure_value, 'Rank': rank})
+                        measures_data.append({
+                            'Category': category,
+                            'Measure': measure_name,
+                            'Measure Value': measure_value,
+                            'Rank': rank
+                        })
 
                     measures_df = pd.DataFrame(measures_data)
+
+                    # Only include measures that have percent values
+                    measures_df = measures_df[measures_df['Measure'].str.contains('percent', case=False, na=False)]
 
                     def highlight_row(row):
                         if row['Rank'] <= 10:
                             return ['background-color: lightgreen'] * len(row)
-                        elif row['Rank'] > len(district_df) - 10:
+                        elif row['Rank'] > len(df) - 10:
                             return ['background-color: lightcoral'] * len(row)
                         else:
                             return [''] * len(row)
 
-                    st.dataframe(measures_df.style.apply(highlight_row, axis=1))
+                    # Set table width and length
+                    st.dataframe(
+                        measures_df.style.apply(highlight_row, axis=1),
+                        width=800, height=600
+                    )
                 else:
                     st.warning("No data found for the selected ZIP code. Please try another.")
             else:
