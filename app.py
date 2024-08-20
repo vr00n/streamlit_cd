@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(layout="wide")
 # Load pre-fetched census data
 df = pd.read_csv('census_data.csv')
 
@@ -65,7 +64,14 @@ else:
                         measure_name = row['Measure']
                         measure_value = district_df[var_code].values[0]
                         ranked_df = calculate_rankings(df, var_code)
-                        rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
+
+                        # Safely handle rounding and converting rank to integer
+                        if pd.notna(ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]):
+                            rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
+                            rank = int(round(rank))
+                        else:
+                            rank = None  # or some other value, or just skip appending if rank is missing
+
                         measures_data.append({
                             'Category': category,
                             'Measure': measure_name,
@@ -79,9 +85,9 @@ else:
                     measures_df = measures_df[measures_df['Measure'].str.contains('percent', case=False, na=False)]
 
                     def highlight_row(row):
-                        if row['Rank'] <= 10:
+                        if row['Rank'] is not None and row['Rank'] <= 10:
                             return ['background-color: lightgreen'] * len(row)
-                        elif row['Rank'] > len(df) - 10:
+                        elif row['Rank'] is not None and row['Rank'] > len(df) - 10:
                             return ['background-color: lightcoral'] * len(row)
                         else:
                             return [''] * len(row)
@@ -89,7 +95,7 @@ else:
                     # Set table width and length
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
-                        use_container_width=True,hide_index=True
+                        use_container_width=True
                     )
                 else:
                     st.warning("No data found for the selected ZIP code. Please try another.")
