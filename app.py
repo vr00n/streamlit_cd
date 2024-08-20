@@ -88,7 +88,7 @@ else:
                     # Set table width and length
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
-                        use_container_width=True
+                        width=1600, height=1600
                     )
                 else:
                     st.warning("No data found for the selected ZIP code. Please try another.")
