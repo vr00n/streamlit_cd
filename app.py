@@ -70,7 +70,7 @@ else:
                             'Category': category,
                             'Measure': measure_name,
                             'Measure Value': measure_value,
-                            'Rank': int(round(rank))
+                            'Rank': rank
                         })
 
                     measures_df = pd.DataFrame(measures_data)
