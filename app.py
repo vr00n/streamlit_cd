@@ -75,7 +75,7 @@ else:
                         measures_data.append({
                             'Category': category,
                             'Measure': measure_name,
-                            'Measure Value': measure_value,
+                            'Percentage of District Population': int(round(measure_value)),
                             'Rank': rank
                         })
 
@@ -83,6 +83,10 @@ else:
 
                     # Only include measures that have percent values
                     measures_df = measures_df[measures_df['Measure'].str.contains('percent', case=False, na=False)]
+
+                    # Convert the columns to integer type to remove decimals
+                    measures_df['Percentage of District Population'] = measures_df['Percentage of District Population'].astype(int)
+                    measures_df['Rank'] = measures_df['Rank'].astype(int)
 
                     def highlight_row(row):
                         if row['Rank'] is not None and row['Rank'] <= 10:
@@ -92,7 +96,7 @@ else:
                         else:
                             return [''] * len(row)
 
-                    # Set table width and length
+                    # Set table width to 100% and ensure the table fits within the container
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
                         use_container_width=True
