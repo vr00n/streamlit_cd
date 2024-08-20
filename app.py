@@ -48,19 +48,19 @@ else:
                 state_abbr = district_info['state_abbr'].values[0]
                 district_number = district_info['district'].values[0]
                 
-                # Format the district number as 2 digits (e.g., 1 -> 01, 10 -> 10)
-                district_number = f"{int(district_number):02d}"
+                # Convert district number to ordinal (e.g., 1 -> 1st)
+                district_ordinal = f"{int(district_number)}"
                 
-                # Construct the standardized district name (e.g., AL-01)
-                district_name = f"{state_abbr}-{district_number}"
+                # Get the full state name (already included in census_data.csv format)
+                state_name = state_abbr_to_name[state_abbr]
+                
+                # Construct the full district name in the format used in census_data.csv
+                district_name = f"Congressional District {district_ordinal} (115th Congress), {state_name}"
 
-                st.write(f"Congressional District: {district_name}")
-
-                # Ensure district name format matches the data
-                df['NAME'] = df['NAME'].str.strip().str.upper()
+                st.write(f"Constructed Congressional District Name: {district_name}")
 
                 # Filter the data for the selected district
-                district_df = df[df['NAME'].str.contains(district_name, case=False)]
+                district_df = df[df['district'].str.contains(district_name, case=False, na=False)]
 
                 if not district_df.empty:
                     measures_data = []
@@ -69,7 +69,7 @@ else:
                         category = row['Category']
                         measure_value = district_df[var_code].values[0]
                         ranked_df = calculate_rankings(df, var_code)
-                        rank = ranked_df[ranked_df['NAME'] == district_name]['Rank'].values[0]
+                        rank = ranked_df[ranked_df['district'] == district_name]['Rank'].values[0]
                         measures_data.append({'Category': category, 'Measure Value': measure_value, 'Rank': rank})
 
                     measures_df = pd.DataFrame(measures_data)
