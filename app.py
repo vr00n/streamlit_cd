@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 
+st.set_page_config(layout="wide")
 # Load pre-fetched census data
 df = pd.read_csv('census_data.csv')
 
@@ -88,7 +89,7 @@ else:
                     # Set table width and length
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
-                        width=1600, height=1600
+                        use_container_width=True
                     )
                 else:
                     st.warning("No data found for the selected ZIP code. Please try another.")
