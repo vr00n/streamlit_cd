@@ -66,17 +66,17 @@ else:
                         measure_value = district_df[var_code].values[0]
                         ranked_df = calculate_rankings(df, var_code)
 
-                        # Safely handle rounding and converting measure_value and rank to integer
+                        # Safely handle rounding and converting measure_value and rank to string
                         if pd.notna(measure_value):
-                            measure_value = int(round(measure_value))
+                            measure_value = str(int(round(measure_value)))
                         else:
-                            measure_value = None  # or some other value, or just skip appending if measure_value is missing
+                            measure_value = 'N/A'
 
                         if pd.notna(ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]):
                             rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
-                            rank = int(round(rank))
+                            rank = str(int(round(rank)))
                         else:
-                            rank = None  # or some other value, or just skip appending if rank is missing
+                            rank = 'N/A'
 
                         measures_data.append({
                             'Category': category,
@@ -91,9 +91,9 @@ else:
                     measures_df = measures_df[measures_df['Measure'].str.contains('percent', case=False, na=False)]
 
                     def highlight_row(row):
-                        if row['Rank'] is not None and row['Rank'] <= 10:
+                        if row['Rank'] != 'N/A' and int(row['Rank']) <= 10:
                             return ['background-color: lightgreen'] * len(row)
-                        elif row['Rank'] is not None and row['Rank'] > len(df) - 10:
+                        elif row['Rank'] != 'N/A' and int(row['Rank']) > len(df) - 10:
                             return ['background-color: lightcoral'] * len(row)
                         else:
                             return [''] * len(row)
