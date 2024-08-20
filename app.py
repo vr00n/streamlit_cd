@@ -62,10 +62,16 @@ else:
                         var_code = row['Variable']
                         category = row['Category']
                         measure_name = row['Measure']
+                        
                         measure_value = district_df[var_code].values[0]
                         ranked_df = calculate_rankings(df, var_code)
 
-                        # Safely handle rounding and converting rank to integer
+                        # Safely handle rounding and converting measure_value and rank to integer
+                        if pd.notna(measure_value):
+                            measure_value = int(round(measure_value))
+                        else:
+                            measure_value = None  # or some other value, or just skip appending if measure_value is missing
+
                         if pd.notna(ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]):
                             rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
                             rank = int(round(rank))
@@ -75,7 +81,7 @@ else:
                         measures_data.append({
                             'Category': category,
                             'Measure': measure_name,
-                            'Percentage of District Population': int(round(measure_value)),
+                            'Percentage of District Population': measure_value,
                             'Rank': rank
                         })
 
@@ -83,10 +89,6 @@ else:
 
                     # Only include measures that have percent values
                     measures_df = measures_df[measures_df['Measure'].str.contains('percent', case=False, na=False)]
-
-                    # Convert the columns to integer type to remove decimals
-                    measures_df['Percentage of District Population'] = measures_df['Percentage of District Population'].astype(int)
-                    measures_df['Rank'] = measures_df['Rank'].astype(int)
 
                     def highlight_row(row):
                         if row['Rank'] is not None and row['Rank'] <= 10:
