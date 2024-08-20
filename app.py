@@ -41,64 +41,58 @@ else:
     zip_code = st.text_input("Enter your ZIP code:")
 
     if zip_code:
-        # Strip whitespace and check if ZIP code is numeric
-        zip_code = zip_code.strip()
-        
-        if zip_code.isdigit() and len(zip_code) == 5:
-            # Convert ZIP code to int and map to congressional district
-            try:
-                district_info = zip_to_district_df[zip_to_district_df['zip'] == int(zip_code)]
-                if not district_info.empty:
-                    state_fips = district_info['state_fips'].values[0]
-                    district_number = district_info['district'].values[0]
-                    
-                    # Format the district number as an integer
-                    district_number_int = int(district_number)
+        # Convert ZIP code to int and map to congressional district
+        try:
+            district_info = zip_to_district_df[zip_to_district_df['zip'] == int(zip_code)]
+            if not district_info.empty:
+                state_fips = district_info['state_fips'].values[0]
+                district_number = district_info['district'].values[0]
+                
+                # Format the district number as an integer
+                district_number_int = int(district_number)
 
-                    st.write(f"Mapped to state FIPS: {state_fips}, District: {district_number_int}")
+                st.write(f"Mapped to state FIPS: {state_fips}, District: {district_number_int}")
 
-                    # Filter the data for the selected district using state and congressional district
-                    district_df = df[(df['state'] == state_fips) & (df['congressional district'] == district_number_int)]
+                # Filter the data for the selected district using state and congressional district
+                district_df = df[(df['state'] == state_fips) & (df['congressional district'] == district_number_int)]
 
-                    if not district_df.empty:
-                        measures_data = []
-                        for _, row in variables_df.iterrows():
-                            var_code = row['Variable']
-                            category = row['Category']
-                            measure_name = row['Measure']
-                            measure_value = district_df[var_code].values[0]
-                            ranked_df = calculate_rankings(df, var_code)
-                            rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
-                            measures_data.append({
-                                'Category': category,
-                                'Measure': measure_name,
-                                'Percentage of District Population': int(round(measure_value)),
-                                'Rank': int(round(rank))
-                            })
+                if not district_df.empty:
+                    measures_data = []
+                    for _, row in variables_df.iterrows():
+                        var_code = row['Variable']
+                        category = row['Category']
+                        measure_name = row['Measure']
+                        measure_value = district_df[var_code].values[0]
+                        ranked_df = calculate_rankings(df, var_code)
+                        rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
+                        measures_data.append({
+                            'Category': category,
+                            'Measure': measure_name,
+                            'Measure Value': measure_value,
+                            'Rank': rank
+                        })
 
-                        measures_df = pd.DataFrame(measures_data)
+                    measures_df = pd.DataFrame(measures_data)
 
-                        # Only include measures that have percent values
-                        measures_df = measures_df[measures_df['Measure'].str.contains('percent', case=False, na=False)]
+                    # Only include measures that have percent values
+                    measures_df = measures_df[measures_df['Measure'].str.contains('percent', case=False, na=False)]
 
-                        def highlight_row(row):
-                            if row['Rank'] <= 10:
-                                return ['background-color: lightgreen'] * len(row)
-                            elif row['Rank'] > len(df) - 10:
-                                return ['background-color: lightcoral'] * len(row)
-                            else:
-                                return [''] * len(row)
+                    def highlight_row(row):
+                        if row['Rank'] <= 10:
+                            return ['background-color: lightgreen'] * len(row)
+                        elif row['Rank'] > len(df) - 10:
+                            return ['background-color: lightcoral'] * len(row)
+                        else:
+                            return [''] * len(row)
 
-                        # Set table width and length, making it 100% wide
-                        st.dataframe(
-                            measures_df.style.apply(highlight_row, axis=1),
-                            use_container_width=True
-                        )
-                    else:
-                        st.warning("No data found for the selected ZIP code. Please try another.")
+                    # Set table width and length
+                    st.dataframe(
+                        measures_df.style.apply(highlight_row, axis=1),
+                        width=800, height=600
+                    )
                 else:
-                    st.warning("ZIP code not found in the database. Please try another.")
-            except ValueError:
-                st.error("Invalid ZIP code format. Please enter a valid ZIP code.")
-        else:
-            st.error("Invalid ZIP code format. Please enter a valid 5-digit ZIP code.")
+                    st.warning("No data found for the selected ZIP code. Please try another.")
+            else:
+                st.warning("ZIP code not found in the database. Please try another.")
+        except ValueError:
+            st.error("Invalid ZIP code format. Please enter a valid ZIP code.")
