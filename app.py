@@ -68,8 +68,8 @@ else:
                         measures_data.append({
                             'Category': category,
                             'Measure': measure_name,
-                            'Percentage of District Population': int(round(measure_value)),
-                            'Rank': int(round(rank))
+                            'Measure Value': measure_value,
+                            'Rank': rank
                         })
 
                     measures_df = pd.DataFrame(measures_data)
@@ -85,7 +85,7 @@ else:
                         else:
                             return [''] * len(row)
 
-                    # Set table width to 100% and ensure the table fits within the container
+                    # Set table width and length
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
                         use_container_width=True
