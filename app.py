@@ -68,8 +68,8 @@ else:
                         measures_data.append({
                             'Category': category,
                             'Measure': measure_name,
-                            'Measure Value': measure_value,
-                            'Rank': rank
+                            'Percentage of District Population': int(round(measure_value)),
+                            'Rank': int(round(rank))
                         })
 
                     measures_df = pd.DataFrame(measures_data)
@@ -85,10 +85,10 @@ else:
                         else:
                             return [''] * len(row)
 
-                    # Set table width and length
+                    # Set table width and length, making it 100% wide
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
-                        width=800, height=600
+                        use_container_width=True
                     )
                 else:
                     st.warning("No data found for the selected ZIP code. Please try another.")
