@@ -4,6 +4,9 @@ import pandas as pd
 # Load pre-fetched census data
 df = pd.read_csv('census_data.csv')
 
+# De-duplicate columns in the census data
+df = df.loc[:, ~df.columns.duplicated()]
+
 # Load the variables from the CSV file
 variables_df = pd.read_csv('Variables.csv')
 
@@ -65,6 +68,10 @@ else:
                         
                         measure_value = district_df[var_code].values[0]
                         ranked_df = calculate_rankings(df, var_code)
+
+                        # Filter out invalid measure values
+                        if measure_value == -888888888:
+                            continue
 
                         # Safely handle rounding and converting measure_value and rank to string
                         if pd.notna(measure_value):
