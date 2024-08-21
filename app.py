@@ -135,6 +135,9 @@ else:
                 # Map state FIPS and congressional district number to a readable format
                 ranked_df['District'] = ranked_df.apply(lambda x: f"{zip_to_district_df.loc[zip_to_district_df['state_fips'] == x['state'], 'state_abbr'].values[0]}-{str(int(x['congressional district'])).zfill(2)}", axis=1)
                 
+                # Create hyperlinks for each district
+                ranked_df['District'] = ranked_df['District'].apply(lambda x: f"[{x}](https://datausa.io/profile/geo/congressional-district-{x.split('-')[1]}-{x.split('-')[0].lower()})")
+    
                 # Sort by rank
                 ranked_df = ranked_df[['District', selected_var, 'Rank']].sort_values(by='Rank')
     
@@ -145,9 +148,13 @@ else:
                 ranked_df['Measure Value'] = ranked_df['Measure Value'].apply(lambda x: int(round(x)) if pd.notna(x) else x)
                 ranked_df['Rank'] = ranked_df['Rank'].apply(lambda x: int(round(x)) if pd.notna(x) else x)
     
-                # Display the dataframe
-                st.dataframe(ranked_df, use_container_width=True)
+                # Display the dataframe with hyperlinks
+                st.markdown(
+                    ranked_df.to_markdown(index=False),
+                    unsafe_allow_html=True
+                )
             else:
                 st.warning("No data found for the selected measure.")
+
 
 
