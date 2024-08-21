@@ -123,11 +123,15 @@ else:
                             return ['background-color: lightcoral'] * len(row)
                         else:
                             return [''] * len(row)
+                    
+                    # Debugging: Check the contents of the measures_df before displaying
+                    st.write("Contents of measures_df:", measures_df)
 
                     # Set table width to 100% and ensure the table fits within the container
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
-                        use_container_width=True
+                        use_container_width=True,
+                        height=1000  # Adjust height as needed to show more rows
                     )
                 else:
                     st.warning("No data found for the selected ZIP code. Please try another.")
