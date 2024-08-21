@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 
+st.set_page_config(layout="wide")
+
 # Load pre-fetched census data
 df = pd.read_csv('census_data.csv')
 
