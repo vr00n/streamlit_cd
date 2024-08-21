@@ -74,18 +74,18 @@ else:
                     measure_name = row['Measure']
                     
                     if var_code in district_df.columns:
-                        measure_value = district_df[var_code].values[0]
+                        measure_value = int(round(district_df[var_code].values[0]))
                         
                         # Check for invalid data
                         if pd.notna(measure_value) and measure_value != -888888888:
                             ranked_df = calculate_rankings(df, var_code)
-                            rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
+                            rank = int(ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0])
                             
                             measures_data.append({
                                 'Category': category,
                                 'Measure': measure_name,
-                                'Percentage of District Population': str(int(round(measure_value))),
-                                'Rank': str(int(round(rank)))
+                                'Percentage of District Population': measure_value,
+                                'Rank': rank
                             })
                             valid_measures_count += 1
                         else:
@@ -113,7 +113,7 @@ else:
                 # Set table width and length
                 st.dataframe(
                     measures_df.style.apply(highlight_row, axis=1),
-                    use_container_width=True
+                    use_container_width=True,hide_index=True
                 )
             else:
                 st.warning("ZIP code not found in the database. Please try another.")
