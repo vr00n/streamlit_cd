@@ -112,18 +112,21 @@ else:
     with tab2:
         st.title("List Congressional Districts by Measure")
     
+        # Combine category and measure for the dropdown
+        variables_df['Display'] = variables_df.apply(lambda x: f"{x['Category']}: {x['Measure']}", axis=1)
+    
         # Dropdown for selecting a measure
-        selected_measure = st.selectbox(
+        selected_display = st.selectbox(
             "Select a Measure",
-            variables_df['Measure'].unique()
+            variables_df['Display'].unique()
         )
     
-        if selected_measure:
-            # Find the variable code for the selected measure
-            selected_var = variables_df[variables_df['Measure'] == selected_measure]['Variable'].values[0]
-            category = variables_df[variables_df['Measure'] == selected_measure]['Category'].values[0]
+        if selected_display:
+            # Find the variable code for the selected display
+            selected_var = variables_df[variables_df['Display'] == selected_display]['Variable'].values[0]
+            category = variables_df[variables_df['Display'] == selected_display]['Category'].values[0]
     
-            st.write(f"Selected Measure: {selected_measure} (Category: {category})")
+            st.write(f"Selected Measure: {selected_display} (Category: {category})")
     
             # Calculate rankings for all districts based on the selected measure
             ranked_df = calculate_rankings(df, selected_var)
@@ -146,4 +149,5 @@ else:
                 st.dataframe(ranked_df, use_container_width=True)
             else:
                 st.warning("No data found for the selected measure.")
+
 
