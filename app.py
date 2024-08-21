@@ -66,24 +66,17 @@ else:
                         category = row['Category']
                         measure_name = row['Measure']
                         
-                        measure_value = district_df[var_code].values[0]
+                        measure_value = district_df[var_code].values[0] if pd.notna(district_df[var_code].values[0]) else None
                         ranked_df = calculate_rankings(df, var_code)
 
-                        # Filter out invalid measure values
-                        if measure_value == -888888888:
+                        # Filter out invalid measure values and NaNs
+                        if measure_value is None or measure_value == -888888888:
                             continue
 
                         # Safely handle rounding and converting measure_value and rank to string
-                        if pd.notna(measure_value):
-                            measure_value = str(int(round(measure_value)))
-                        else:
-                            measure_value = 'N/A'
-
-                        if pd.notna(ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]):
-                            rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
-                            rank = str(int(round(rank)))
-                        else:
-                            rank = 'N/A'
+                        measure_value = str(int(round(measure_value))) if pd.notna(measure_value) else 'N/A'
+                        rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
+                        rank = str(int(round(rank))) if pd.notna(rank) else 'N/A'
 
                         measures_data.append({
                             'Category': category,
