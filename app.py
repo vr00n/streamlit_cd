@@ -10,10 +10,21 @@ df = df.loc[:, ~df.columns.duplicated()]
 # Load the variables from the CSV file
 variables_df = pd.read_csv('Variables.csv')
 
-# Filter variables that end with "PE", have "Percent" in the P_or_E column, and exclude specific categories
-variables_df = variables_df[(variables_df['Variable'].str.endswith("PE")) & 
-                            (variables_df['P_or_E'] == 'Percent') & 
-                            (variables_df['Category'] != "SELECTED SOCIAL CHARACTERISTICS IN PUERTO RICO")]
+# Debugging: Report the initial number of measures in Variables.csv
+initial_measure_count = variables_df.shape[0]
+st.write(f"Initial number of measures in Variables.csv: {initial_measure_count}")
+
+# Filter variables that end with "PE"
+variables_df = variables_df[variables_df['Variable'].str.endswith("PE")]
+st.write(f"Number of measures after filtering for 'PE': {variables_df.shape[0]}")
+
+# Further filter variables that have "Percent" in the P_or_E column
+variables_df = variables_df[variables_df['P_or_E'] == 'Percent']
+st.write(f"Number of measures after filtering for 'Percent': {variables_df.shape[0]}")
+
+# Exclude variables where Category equals "SELECTED SOCIAL CHARACTERISTICS IN PUERTO RICO"
+variables_df = variables_df[variables_df['Category'] != "SELECTED SOCIAL CHARACTERISTICS IN PUERTO RICO"]
+st.write(f"Number of measures after excluding Puerto Rico-related measures: {variables_df.shape[0]}")
 
 # Load ZIP code to congressional district mapping
 zip_to_district_df = pd.read_csv('zip_to_congressional_district.csv')
