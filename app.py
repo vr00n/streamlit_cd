@@ -66,6 +66,11 @@ else:
                         category = row['Category']
                         measure_name = row['Measure']
                         
+                        # Check if the variable exists in the data
+                        if var_code not in district_df.columns:
+                            st.warning(f"Variable {var_code} not found in the census data. Skipping...")
+                            continue
+
                         measure_value = district_df[var_code].values[0] if pd.notna(district_df[var_code].values[0]) else None
                         ranked_df = calculate_rankings(df, var_code)
 
