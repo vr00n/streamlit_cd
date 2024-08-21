@@ -66,7 +66,7 @@ else:
             try:
                 district_info = zip_to_district_df[zip_to_district_df['zip'] == int(zip_code)]
                 if not district_info.empty:
-                    state_fips = district_info['state_fips'].values[0]
+                    state_fips = str(district_info['state_fips'].values[0]).zfill(2)
                     district_number = district_info['district'].values[0]
                     
                     # Format the district number as an integer
