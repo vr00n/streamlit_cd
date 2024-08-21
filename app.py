@@ -35,7 +35,7 @@ state_fips_to_name = {
 }
 
 # Initialize OpenAI client using st.secrets for the API key
-client = OpenAI(api_key=st.secrets["openai"]["api_key"])
+openai.api_key = st.secrets["openai"]["api_key"]
 
 def get_openai_chat_response(data):
     response = openai.ChatCompletion.create(
