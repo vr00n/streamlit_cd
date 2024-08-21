@@ -38,7 +38,7 @@ state_fips_to_name = {
 client = OpenAI(api_key=st.secrets["openai"]["api_key"])
 
 def get_openai_chat_response(data):
-    chat_completion = client.chat_completions.create(
+    response = openai.ChatCompletion.create(
         model="gpt-4o",  # Use the GPT-4o chat model
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -46,7 +46,7 @@ def get_openai_chat_response(data):
         ],
         max_tokens=150,
     )
-    return chat_completion.choices[0].message['content'].strip()
+    return response['choices'][0]['message']['content'].strip()
 
 if variables_df.empty or df.empty or zip_to_district_df.empty:
     st.error("Data could not be loaded. Please check the data files.")
