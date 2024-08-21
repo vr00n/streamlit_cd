@@ -122,7 +122,10 @@ else:
         sorted_options = sorted(variables_df['Display'].unique())
 
         # Create a dropdown for selecting a measure
-        selected_measure = st.selectbox("Select a Measure", sorted_options)
+        selected_display = st.selectbox(
+            "Select a Measure",
+            sorted_options
+        )
             
         if selected_display:
             # Find the variable code for the selected display
