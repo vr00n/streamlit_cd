@@ -136,7 +136,7 @@ else:
                 ranked_df['District'] = ranked_df.apply(lambda x: f"{zip_to_district_df.loc[zip_to_district_df['state_fips'] == x['state'], 'state_abbr'].values[0]}-{str(int(x['congressional district'])).zfill(2)}", axis=1)
                 
                 # Create hyperlinks for each district
-                ranked_df['District'] = ranked_df['District'].apply(lambda x: f"[{x}](https://datausa.io/profile/geo/congressional-district-{x.split('-')[1]}-{x.split('-')[0].lower()})")
+                #ranked_df['District'] = ranked_df['District'].apply(lambda x: f"[{x}](https://datausa.io/profile/geo/congressional-district-{x.split('-')[1]}-{x.split('-')[0].lower()})")
     
                 # Sort by rank
                 ranked_df = ranked_df[['District', selected_var, 'Rank']].sort_values(by='Rank')
