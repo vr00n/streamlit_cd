@@ -46,7 +46,7 @@ def get_openai_chat_response(data):
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": f"Based on the following measures: {data}, describe the typical household from a political perspective for someone running for Congress."},
         ],
-        max_tokens=300,
+        max_tokens=600,
     )
     return response.choices[0].message.content.strip()
 
