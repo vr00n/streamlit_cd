@@ -146,9 +146,9 @@ else:
                     # Pass the DataFrame content to the OpenAI API and get the response
                     openai_response = get_openai_response(measures_dict)
 
-    # Display the OpenAI API response in Tab 1
-    st.subheader("Political Perspective Based on Measures")
-    st.write(openai_response)
+                    # Display the OpenAI API response in Tab 1
+                    st.subheader("Political Perspective Based on Measures")
+                    st.write(openai_response)
                 else:
                     st.warning("ZIP code not found in the database. Please try another.")
             except ValueError:
