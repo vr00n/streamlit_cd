@@ -104,7 +104,7 @@ else:
 
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
-                        use_container_width=True
+                        use_container_width=True,hide_index=True
                     )
                 else:
                     st.warning("ZIP code not found in the database. Please try another.")
@@ -157,7 +157,7 @@ else:
                 # Display the dataframe with hyperlinks
                 st.markdown(
                     ranked_df.to_markdown(index=False),
-                    unsafe_allow_html=True
+                    unsafe_allow_html=True,hide_index=True
                 )
             else:
                 st.warning("No data found for the selected measure.")
