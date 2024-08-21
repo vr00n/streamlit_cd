@@ -157,7 +157,7 @@ else:
                 # Display the dataframe with hyperlinks
                 st.markdown(
                     ranked_df.to_markdown(index=False),
-                    unsafe_allow_html=True,hide_index=True
+                    unsafe_allow_html=True
                 )
             else:
                 st.warning("No data found for the selected measure.")
