@@ -113,16 +113,17 @@ else:
 
     with tab2:
         st.title("List Congressional Districts by Measure")
+
     
         # Combine category and measure for the dropdown
         variables_df['Display'] = variables_df.apply(lambda x: f"{x['Category']}: {x['Measure']}", axis=1)
-    
-        # Dropdown for selecting a measure
-        selected_display = st.selectbox(
-            "Select a Measure",
-            variables_df['Display'].unique()
-        )
-    
+
+        # Sort the options alphabetically
+        sorted_options = sorted(variables_df['Display'].unique())
+
+        # Create a dropdown for selecting a measure
+        selected_measure = st.selectbox("Select a Measure", sorted_options)
+            
         if selected_display:
             # Find the variable code for the selected display
             selected_var = variables_df[variables_df['Display'] == selected_display]['Variable'].values[0]
