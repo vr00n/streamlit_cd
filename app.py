@@ -72,8 +72,12 @@ else:
                 # Filter the data for the selected district using state and congressional district
                 district_df = df[(df['state'] == state_fips) & (df['congressional district'] == district_number_int)]
 
+                st.write(f"Number of variables in district_df: {district_df.shape[1] - 2}")  # Subtract 2 for the 'state' and 'congressional district' columns
+
                 if not district_df.empty:
                     measures_data = []
+                    processed_count = 0
+
                     for _, row in variables_df.iterrows():
                         var_code = row['Variable']
                         category = row['Category']
@@ -91,6 +95,8 @@ else:
                         if measure_value is None or measure_value == -888888888:
                             continue
 
+                        processed_count += 1  # Count the number of measures that pass the filters
+
                         # Safely handle rounding and converting measure_value and rank to string
                         measure_value = str(int(round(measure_value))) if pd.notna(measure_value) else 'N/A'
                         rank = ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0]
@@ -102,6 +108,8 @@ else:
                             'Percentage of District Population': measure_value,
                             'Rank': rank
                         })
+
+                    st.write(f"Number of measures processed and included in the final table: {processed_count}")
 
                     measures_df = pd.DataFrame(measures_data)
 
