@@ -10,8 +10,10 @@ df = df.loc[:, ~df.columns.duplicated()]
 # Load the variables from the CSV file
 variables_df = pd.read_csv('Variables.csv')
 
-# Filter variables that have "Percent" in the P_or_E column
-variables_df = variables_df[variables_df['P_or_E'] == 'Percent']
+# Filter variables that end with "PE", have "Percent" in the P_or_E column, and exclude specific categories
+variables_df = variables_df[(variables_df['Variable'].str.endswith("PE")) & 
+                            (variables_df['P_or_E'] == 'Percent') & 
+                            (variables_df['Category'] != "SELECTED SOCIAL CHARACTERISTICS IN PUERTO RICO")]
 
 # Load ZIP code to congressional district mapping
 zip_to_district_df = pd.read_csv('zip_to_congressional_district.csv')
