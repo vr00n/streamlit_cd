@@ -89,7 +89,7 @@ else:
                             })
                             valid_measures_count += 1
                         else:
-                            st.write(f"Skipping measure due to invalid data: {measure_name} with value {measure_value}")
+                            continue
                     else:
                         st.write(f"Variable {var_code} not found in the district data. Skipping...")
 
