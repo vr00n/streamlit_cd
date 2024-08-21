@@ -18,6 +18,7 @@ variables_df = variables_df[variables_df['Category'] != 'SELECTED SOCIAL CHARACT
 # Load ZIP code to congressional district mapping
 zip_to_district_df = pd.read_csv('zip_to_congressional_district.csv')
 
+# State FIPS to state name mapping
 state_fips_to_name = {
     '01': 'Alabama', '02': 'Alaska', '04': 'Arizona', '05': 'Arkansas', '06': 'California',
     '08': 'Colorado', '09': 'Connecticut', '10': 'Delaware', '11': 'District of Columbia',
@@ -66,22 +67,21 @@ else:
             try:
                 district_info = zip_to_district_df[zip_to_district_df['zip'] == int(zip_code)]
                 if not district_info.empty:
-                    state_fips = str(district_info['state_fips'].values[0])
+                    state_fips = str(district_info['state_fips'].values[0]).zfill(2)
                     district_number = district_info['district'].values[0]
                     
                     # Format the district number as an integer
                     district_number_int = int(district_number)
-                        # Get state name from FIPS
-                    state_name = state_fips_to_name.get(state_fips, "Unknown")
 
+                    # Get state name from FIPS
+                    state_name = state_fips_to_name.get(state_fips, "Unknown")
 
                     # Construct readable district name
                     district_name_readable = f"{state_name} {district_number_int}th"
 
                     st.write(f"Your congressional district is {district_name_readable}.")
 
-
-                    district_df = df[(df['state'] == state_fips) & (df['congressional district'] == district_number_int)]
+                    district_df = df[(df['state'] == int(state_fips)) & (df['congressional district'] == district_number_int)]
 
                     measures_data = []
                     valid_measures_count = 0
@@ -96,7 +96,7 @@ else:
                             
                             if pd.notna(measure_value) and measure_value != -888888888:
                                 ranked_df = calculate_rankings(df, var_code)
-                                rank = int(ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0])
+                                rank = int(ranked_df[(ranked_df['state'] == int(state_fips)) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0])
                                 
                                 measures_data.append({
                                     'Category': category,
@@ -125,7 +125,7 @@ else:
 
                     st.dataframe(
                         measures_df.style.apply(highlight_row, axis=1),
-                        use_container_width=True,hide_index=True
+                        use_container_width=True, hide_index=True
                     )
                 else:
                     st.warning("ZIP code not found in the database. Please try another.")
@@ -135,7 +135,6 @@ else:
     with tab2:
         st.title("List Congressional Districts by Measure")
 
-    
         # Combine category and measure for the dropdown
         variables_df['Display'] = variables_df.apply(lambda x: f"{x['Category']}: {x['Measure']}", axis=1)
 
@@ -176,12 +175,14 @@ else:
                 ranked_df['Rank'] = ranked_df['Rank'].apply(lambda x: int(round(x)) if pd.notna(x) else x)
     
                 # Display the dataframe with hyperlinks
-                st.markdown(
-                    ranked_df.to_markdown(index=False),
-                    unsafe_allow_html=True
+                st.data_editor(
+                    ranked_df,
+                    column_config={
+                        "District": st.column_config.LinkColumn("District"),
+                        "Measure Value": "Measure Value",
+                        "Rank": "Rank"
+                    },
+                    hide_index=True,
                 )
             else:
                 st.warning("No data found for the selected measure.")
-
-
-
