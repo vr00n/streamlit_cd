@@ -18,6 +18,20 @@ variables_df = variables_df[variables_df['Category'] != 'SELECTED SOCIAL CHARACT
 # Load ZIP code to congressional district mapping
 zip_to_district_df = pd.read_csv('zip_to_congressional_district.csv')
 
+state_fips_to_name = {
+    '01': 'Alabama', '02': 'Alaska', '04': 'Arizona', '05': 'Arkansas', '06': 'California',
+    '08': 'Colorado', '09': 'Connecticut', '10': 'Delaware', '11': 'District of Columbia',
+    '12': 'Florida', '13': 'Georgia', '15': 'Hawaii', '16': 'Idaho', '17': 'Illinois',
+    '18': 'Indiana', '19': 'Iowa', '20': 'Kansas', '21': 'Kentucky', '22': 'Louisiana',
+    '23': 'Maine', '24': 'Maryland', '25': 'Massachusetts', '26': 'Michigan', '27': 'Minnesota',
+    '28': 'Mississippi', '29': 'Missouri', '30': 'Montana', '31': 'Nebraska', '32': 'Nevada',
+    '33': 'New Hampshire', '34': 'New Jersey', '35': 'New Mexico', '36': 'New York',
+    '37': 'North Carolina', '38': 'North Dakota', '39': 'Ohio', '40': 'Oklahoma', '41': 'Oregon',
+    '42': 'Pennsylvania', '44': 'Rhode Island', '45': 'South Carolina', '46': 'South Dakota',
+    '47': 'Tennessee', '48': 'Texas', '49': 'Utah', '50': 'Vermont', '51': 'Virginia',
+    '53': 'Washington', '54': 'West Virginia', '55': 'Wisconsin', '56': 'Wyoming'
+}
+
 if variables_df.empty or df.empty or zip_to_district_df.empty:
     st.error("Data could not be loaded. Please check the data files.")
 else:
@@ -57,8 +71,15 @@ else:
                     
                     # Format the district number as an integer
                     district_number_int = int(district_number)
+                        # Get state name from FIPS
+                    state_name = state_fips_to_name.get(state_fips, "Unknown")
 
-                    st.write(f"Mapped to state FIPS: {state_fips}, District: {district_number_int}")
+
+                    # Construct readable district name
+                    district_name_readable = f"{state_name} {district_number_int}th"
+
+                    st.write(f"Your congressional district is {district_name_readable}.")
+
 
                     district_df = df[(df['state'] == state_fips) & (df['congressional district'] == district_number_int)]
 
