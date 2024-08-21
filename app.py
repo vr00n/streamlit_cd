@@ -146,7 +146,7 @@ else:
                     # Convert measures_df to a format that can be passed to the OpenAI API
                     measures_dict = measures_df.to_dict(orient='records')
                     # Pass the DataFrame content to the OpenAI API and get the response
-                    openai_response = get_openai_response(measures_dict)
+                    openai_response = get_openai_chat_response(measures_dict)
 
                     # Display the OpenAI API response in Tab 1
                     st.subheader("Political Perspective Based on Measures")
