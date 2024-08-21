@@ -111,35 +111,39 @@ else:
 
     with tab2:
         st.title("List Congressional Districts by Measure")
-
+    
         # Dropdown for selecting a measure
         selected_measure = st.selectbox(
             "Select a Measure",
             variables_df['Measure'].unique()
         )
-
+    
         if selected_measure:
             # Find the variable code for the selected measure
             selected_var = variables_df[variables_df['Measure'] == selected_measure]['Variable'].values[0]
             category = variables_df[variables_df['Measure'] == selected_measure]['Category'].values[0]
-
+    
             st.write(f"Selected Measure: {selected_measure} (Category: {category})")
-
+    
             # Calculate rankings for all districts based on the selected measure
             ranked_df = calculate_rankings(df, selected_var)
-
+    
             if not ranked_df.empty:
-                ranked_df['District'] = ranked_df.apply(lambda x: f"{x['state']}-{str(int(x['congressional district'])).zfill(2)}", axis=1)
+                # Map state FIPS and congressional district number to a readable format
+                ranked_df['District'] = ranked_df.apply(lambda x: f"{zip_to_district_df.loc[zip_to_district_df['state_fips'] == x['state'], 'state_abbr'].values[0]}-{str(int(x['congressional district'])).zfill(2)}", axis=1)
+                
+                # Sort by rank
                 ranked_df = ranked_df[['District', selected_var, 'Rank']].sort_values(by='Rank')
-
+    
                 # Rename columns for clarity
                 ranked_df.columns = ['District', 'Measure Value', 'Rank']
-
+    
                 # Convert measure value and rank to integers
                 ranked_df['Measure Value'] = ranked_df['Measure Value'].apply(lambda x: int(round(x)) if pd.notna(x) else x)
                 ranked_df['Rank'] = ranked_df['Rank'].apply(lambda x: int(round(x)) if pd.notna(x) else x)
-
+    
                 # Display the dataframe
                 st.dataframe(ranked_df, use_container_width=True)
             else:
                 st.warning("No data found for the selected measure.")
+
