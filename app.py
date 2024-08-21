@@ -38,84 +38,108 @@ else:
             df['Rank'] = df[var_code].rank(ascending=False)
         return df
 
-    # Main Section: ZIP code to Congressional District Mapping and Measures
-    st.title("Find Your Congressional District Measures")
+    # Create two tabs: one for finding congressional district measures by ZIP code and another for listing districts by measure
+    tab1, tab2 = st.tabs(["Find District Measures by ZIP", "List Districts by Measure"])
 
-    # Debugging: Print initial number of measures
-    st.write(f"Initial number of measures in Variables.csv: {len(variables_df)}")
+    with tab1:
+        st.title("Find Your Congressional District Measures")
 
-    zip_code = st.text_input("Enter your ZIP code:")
+        zip_code = st.text_input("Enter your ZIP code:")
 
-    if zip_code:
-        # Convert ZIP code to int and map to congressional district
-        try:
-            district_info = zip_to_district_df[zip_to_district_df['zip'] == int(zip_code)]
-            if not district_info.empty:
-                state_fips = district_info['state_fips'].values[0]
-                district_number = district_info['district'].values[0]
-                
-                # Format the district number as an integer
-                district_number_int = int(district_number)
-
-                st.write(f"Mapped to state FIPS: {state_fips}, District: {district_number_int}")
-
-                # Filter the data for the selected district using state and congressional district
-                district_df = df[(df['state'] == state_fips) & (df['congressional district'] == district_number_int)]
-
-                # Debugging: Report the number of variables in the district_df
-                st.write(f"Number of variables in district_df: {district_df.shape[1] - 2}")
-
-                measures_data = []
-                valid_measures_count = 0
-
-                for _, row in variables_df.iterrows():
-                    var_code = row['Variable']
-                    category = row['Category']
-                    measure_name = row['Measure']
+        if zip_code:
+            try:
+                district_info = zip_to_district_df[zip_to_district_df['zip'] == int(zip_code)]
+                if not district_info.empty:
+                    state_fips = district_info['state_fips'].values[0]
+                    district_number = district_info['district'].values[0]
                     
-                    if var_code in district_df.columns:
-                        measure_value = int(round(district_df[var_code].values[0]))
+                    # Format the district number as an integer
+                    district_number_int = int(district_number)
+
+                    st.write(f"Mapped to state FIPS: {state_fips}, District: {district_number_int}")
+
+                    district_df = df[(df['state'] == state_fips) & (df['congressional district'] == district_number_int)]
+
+                    measures_data = []
+                    valid_measures_count = 0
+
+                    for _, row in variables_df.iterrows():
+                        var_code = row['Variable']
+                        category = row['Category']
+                        measure_name = row['Measure']
                         
-                        # Check for invalid data
-                        if pd.notna(measure_value) and measure_value != -888888888:
-                            ranked_df = calculate_rankings(df, var_code)
-                            rank = int(ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0])
+                        if var_code in district_df.columns:
+                            measure_value = int(round(district_df[var_code].values[0]))
                             
-                            measures_data.append({
-                                'Category': category,
-                                'Measure': measure_name,
-                                'Percentage of District Population': measure_value,
-                                'Rank': rank
-                            })
-                            valid_measures_count += 1
+                            if pd.notna(measure_value) and measure_value != -888888888:
+                                ranked_df = calculate_rankings(df, var_code)
+                                rank = int(ranked_df[(ranked_df['state'] == state_fips) & (ranked_df['congressional district'] == district_number_int)]['Rank'].values[0])
+                                
+                                measures_data.append({
+                                    'Category': category,
+                                    'Measure': measure_name,
+                                    'Percentage of District Population': measure_value,
+                                    'Rank': rank
+                                })
+                                valid_measures_count += 1
+                            else:
+                                continue
                         else:
-                            continue
-                    else:
-                        st.write(f"Variable {var_code} not found in the district data. Skipping...")
+                            st.write(f"Variable {var_code} not found in the district data. Skipping...")
 
-                # Debugging: Report the final count of valid measures
-                st.write(f"Number of measures processed and included in the final table: {valid_measures_count}")
+                    st.write(f"Number of measures processed and included in the final table: {valid_measures_count}")
 
-                measures_df = pd.DataFrame(measures_data)
+                    measures_df = pd.DataFrame(measures_data)
 
-                # Only include measures that have percent values
-                measures_df = measures_df[measures_df['Percentage of District Population'] != '-888888888']
+                    def highlight_row(row):
+                        rank = int(row['Rank'])
+                        if rank <= 10:
+                            return ['background-color: lightgreen'] * len(row)
+                        elif rank > len(df) - 10:
+                            return ['background-color: lightcoral'] * len(row)
+                        else:
+                            return [''] * len(row)
 
-                def highlight_row(row):
-                    rank = int(row['Rank'])
-                    if rank <= 10:
-                        return ['background-color: lightgreen'] * len(row)
-                    elif rank > len(df) - 10:
-                        return ['background-color: lightcoral'] * len(row)
-                    else:
-                        return [''] * len(row)
+                    st.dataframe(
+                        measures_df.style.apply(highlight_row, axis=1),
+                        use_container_width=True
+                    )
+                else:
+                    st.warning("ZIP code not found in the database. Please try another.")
+            except ValueError:
+                st.error("Invalid ZIP code format. Please enter a valid ZIP code.")
 
-                # Set table width and length
-                st.dataframe(
-                    measures_df.style.apply(highlight_row, axis=1),
-                    use_container_width=True,hide_index=True
-                )
+    with tab2:
+        st.title("List Congressional Districts by Measure")
+
+        # Dropdown for selecting a measure
+        selected_measure = st.selectbox(
+            "Select a Measure",
+            variables_df['Measure'].unique()
+        )
+
+        if selected_measure:
+            # Find the variable code for the selected measure
+            selected_var = variables_df[variables_df['Measure'] == selected_measure]['Variable'].values[0]
+            category = variables_df[variables_df['Measure'] == selected_measure]['Category'].values[0]
+
+            st.write(f"Selected Measure: {selected_measure} (Category: {category})")
+
+            # Calculate rankings for all districts based on the selected measure
+            ranked_df = calculate_rankings(df, selected_var)
+
+            if not ranked_df.empty:
+                ranked_df['District'] = ranked_df.apply(lambda x: f"{x['state']}-{str(int(x['congressional district'])).zfill(2)}", axis=1)
+                ranked_df = ranked_df[['District', selected_var, 'Rank']].sort_values(by='Rank')
+
+                # Rename columns for clarity
+                ranked_df.columns = ['District', 'Measure Value', 'Rank']
+
+                # Convert measure value and rank to integers
+                ranked_df['Measure Value'] = ranked_df['Measure Value'].apply(lambda x: int(round(x)) if pd.notna(x) else x)
+                ranked_df['Rank'] = ranked_df['Rank'].apply(lambda x: int(round(x)) if pd.notna(x) else x)
+
+                # Display the dataframe
+                st.dataframe(ranked_df, use_container_width=True)
             else:
-                st.warning("ZIP code not found in the database. Please try another.")
-        except ValueError:
-            st.error("Invalid ZIP code format. Please enter a valid ZIP code.")
+                st.warning("No data found for the selected measure.")
