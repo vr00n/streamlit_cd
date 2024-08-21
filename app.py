@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import openai
 
 st.set_page_config(layout="wide")
 
@@ -32,6 +33,18 @@ state_fips_to_name = {
     '47': 'Tennessee', '48': 'Texas', '49': 'Utah', '50': 'Vermont', '51': 'Virginia',
     '53': 'Washington', '54': 'West Virginia', '55': 'Wisconsin', '56': 'Wyoming'
 }
+
+# Access the OpenAI API key from st.secrets
+openai.api_key = st.secrets["openai"]["api_key"]
+
+# Function to get a response from the OpenAI API
+def get_openai_response(data):
+    response = openai.Completion.create(
+        model="gpt-4o",  # Use the GPT-4o model
+        prompt=f"Based on the following measures: {data}, describe the typical household from a political perspective for someone running for Congress.",
+        max_tokens=150,
+    )
+    return response.choices[0].text.strip()
 
 if variables_df.empty or df.empty or zip_to_district_df.empty:
     st.error("Data could not be loaded. Please check the data files.")
@@ -127,6 +140,15 @@ else:
                         measures_df.style.apply(highlight_row, axis=1),
                         use_container_width=True, hide_index=True
                     )
+
+                    # Convert measures_df to a format that can be passed to the OpenAI API
+                    measures_dict = measures_df.to_dict(orient='records')
+                    # Pass the DataFrame content to the OpenAI API and get the response
+                    openai_response = get_openai_response(measures_dict)
+
+    # Display the OpenAI API response in Tab 1
+    st.subheader("Political Perspective Based on Measures")
+    st.write(openai_response)
                 else:
                     st.warning("ZIP code not found in the database. Please try another.")
             except ValueError:
