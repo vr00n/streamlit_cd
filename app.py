@@ -43,8 +43,8 @@ def get_openai_chat_response(data):
     response = client.chat.completions.create(
         model="gpt-4o-mini",  # Use the GPT-4o chat model
         messages=[
-            {"role": "system", "content": "You are a helpful assistant. Limit responses to under 600 tokens"},
-            {"role": "user", "content": f"Based on the following measures: {data}, describe the typical household from a political perspective for someone running for Congress. "},
+            {"role": "system", "content": "You are an expert political strategist like James Carville or Frank Luntz. Limit responses to under 600 tokens"},
+            {"role": "user", "content": f"Based on the following measures: {data}, describe the typical household from a political perspective for someone running for Congress. Use emojis for each unique characteristic. Make it as unique to the regiion as possible"},
         ],
         max_tokens=900,
     )
@@ -151,7 +151,7 @@ else:
                     openai_response = get_openai_chat_response(measures_dict)
 
                     # Display the OpenAI API response in Tab 1
-                    st.subheader("Political Perspective Based on Measures")
+                    st.subheader("Campaign Platform (Powered by ChatGPT)")
                     st.write(openai_response)
                 else:
                     st.warning("ZIP code not found in the database. Please try another.")
