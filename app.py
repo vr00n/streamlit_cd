@@ -44,7 +44,7 @@ def get_openai_chat_response(data):
         model="gpt-4o-mini",  # Use the GPT-4o chat model
         messages=[
             {"role": "system", "content": "You are an expert political strategist like James Carville or Frank Luntz. Limit responses to under 600 tokens"},
-            {"role": "user", "content": f"Based on the following measures: {data}, describe the typical household from a political perspective for someone running for Congress. Use emojis for each unique characteristic. Make it as unique to the regiion as possible"},
+            {"role": "user", "content": f"Based on the following measures: {data}, describe the typical household from a political perspective for someone running for Congress. Use emojis for each unique characteristic. Make it as unique to the regiion as possible. Avoid providing generic responses and make local references."},
         ],
         max_tokens=900,
     )
