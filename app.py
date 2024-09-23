@@ -43,8 +43,8 @@ def get_openai_chat_response(data):
     response = client.chat.completions.create(
         model="gpt-4o-mini",  # Use the GPT-4o chat model
         messages=[
-            {"role": "system", "content": "You are a gifted political strategist that can tap into the pulse of communities. Limit responses to under 600 tokens"},
-            {"role": "user", "content": f"Based on the following measures: {data}, describe the typical household. Use emojis for each unique characteristic. Speak as if in a loud bar"},
+            {"role": "system", "content": "You area  mobile canvassing application for the Harris 2024 campaign. Limit responses to under 600 tokens"},
+            {"role": "user", "content": f"Based on the following measures: {data}, describe the typical household in this area and develop a script that can be used to convince them to Vote for Harris / Walz. Use emojis for each unique characteristic. "},
         ],
         max_tokens=900,
     )
